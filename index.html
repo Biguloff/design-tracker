@@ -101,6 +101,7 @@ a { color:var(--accent-light); text-decoration:none; }
 .cl-time { font-size:12px; color:var(--accent-light); font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
 .cl-time .cl-tag { background:rgba(52,199,89,0.15); color:var(--green); padding:2px 8px; border-radius:50px; font-size:10px; font-weight:700; text-transform:uppercase; }
 .cl-time .cl-tag-fix { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.cl-time .cl-tag-audit { background:rgba(125,79,255,0.15); color:var(--accent-light); }
 .cl-desc { font-size:14px; font-weight:500; margin-bottom:6px; }
 .cl-items { display:flex; flex-wrap:wrap; gap:6px; }
 .cl-item { background:var(--bg3); border:1px solid var(--border); padding:3px 10px; border-radius:50px; font-size:11px; color:var(--text2); cursor:pointer; transition:all 0.2s; }
@@ -170,18 +171,18 @@ const DATA = {
         { cat: "Colors", name: "bg/profile-card", figma: "#0C0D0F / #DFE3EE", ios: "profileCardBackground", status: "done" },
         { cat: "Colors", name: "badge bg", figma: "#141517 / #DFE3EE", ios: "fieldBackground", status: "done" },
         { cat: "Colors", name: "badge border", figma: "white", ios: "white", status: "done" },
-        { cat: "Colors", name: "badge shadow (dark)", figma: "0,8,13 rgba(0,0,0,0.5)", ios: "hardcoded 0xB5BECD", status: "wrong" },
-        { cat: "Colors", name: "badge shadow (light)", figma: "0,8,13 #B5BECD", ios: "not applied", status: "missing" },
+        { cat: "Colors", name: "badge shadow (dark)", figma: "0,8,13 rgba(0,0,0,0.5)", ios: "black @0.5 per-theme", status: "done" },
+        { cat: "Colors", name: "badge shadow (light)", figma: "0,8,13 #B5BECD", ios: "0xB5BECD @1.0 per-theme", status: "done" },
         { cat: "Colors", name: "username color (dark)", figma: "#8D93A1 @80%", ios: "textDisabled", status: "done" },
         { cat: "Colors", name: "username color (light)", figma: "#333740 @60%", ios: "textDisabled", status: "done" },
         { cat: "Colors", name: "stats labels opacity", figma: "60%", ios: "needs verify", status: "progress" },
-        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "storiesCardBorder token", status: "done" },
         // --- TYPOGRAPHY ---
         { cat: "Typography", name: "name font", figma: "Manrope SemiBold 32px", ios: "headingName 32pt", status: "done" },
         { cat: "Typography", name: "name tracking", figma: "-1.28px", ios: "not set", status: "missing" },
-        { cat: "Typography", name: "username font", figma: "Manrope Medium 12px", ios: "caption 12pt", status: "wrong" },
-        { cat: "Typography", name: "stats number font", figma: "Manrope Medium 20px", ios: "no token (statsNumber)", status: "missing" },
-        { cat: "Typography", name: "stats label font", figma: "Manrope Medium 12px", ios: "no token (statsLabel)", status: "missing" },
+        { cat: "Typography", name: "username font", figma: "Manrope Medium 12px", ios: "manropeMedium 12pt", status: "done" },
+        { cat: "Typography", name: "stats number font", figma: "Manrope Medium 20px", ios: "ThemeFonts.statsNumber", status: "done" },
+        { cat: "Typography", name: "stats label font", figma: "Manrope Medium 12px", ios: "ThemeFonts.statsLabel", status: "done" },
         { cat: "Typography", name: "bio font", figma: "Manrope Medium 12px", ios: "caption", status: "done" },
         { cat: "Typography", name: "badge font", figma: "Manrope SemiBold 14px -0.56", ios: "hardcoded", status: "wrong" },
         // --- LAYOUT ---
@@ -192,13 +193,13 @@ const DATA = {
         { cat: "Layout", name: "stories height", figma: "130px", ios: "needs verify", status: "progress" },
         { cat: "Layout", name: "story circles size", figma: "64px", ios: "no token", status: "missing" },
         { cat: "Layout", name: "story circles gap", figma: "20px", ios: "no token", status: "missing" },
-        { cat: "Layout", name: "photo grid gap", figma: "10.84px", ios: "no token", status: "missing" },
-        { cat: "Layout", name: "photo grid cell radius", figma: "8px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "photo grid gap", figma: "10.84px", ios: "gaps.photoGrid token", status: "done" },
+        { cat: "Layout", name: "photo grid cell radius", figma: "8px", ios: "cornerRadii.small (8pt)", status: "done" },
         { cat: "Layout", name: "photo grid cell size", figma: "~111.4×111.4", ios: "calculated", status: "done" },
-        { cat: "Layout", name: "screen padding horizontal", figma: "12px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "screen padding horizontal", figma: "12px", ios: "padding.screenHorizontal token", status: "done" },
         // --- EFFECTS ---
-        { cat: "Effects", name: "name gradient text", figma: "linear-gradient 81.16deg", ios: "not implemented", status: "missing" },
-        { cat: "Effects", name: "purple glow around avatar", figma: "blur 45, #7D4FFF @0.9", ios: "in ThemeEffects, not applied", status: "missing" },
+        { cat: "Effects", name: "name gradient text", figma: "linear-gradient 81.16deg", ios: "applyThemeGradientTextColor()", status: "done" },
+        { cat: "Effects", name: "purple glow around avatar", figma: "blur 45, #7D4FFF @0.9", ios: "updateAvatarGlow()", status: "done" },
         { cat: "Effects", name: "decorative glow ellipses", figma: "radial gradient purple", ios: "ThemeBackgroundView", status: "done" },
       ]
     },
@@ -209,11 +210,11 @@ const DATA = {
       elements: [
         { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
         { cat: "Colors", name: "stories card bg", figma: "#0C0D0F / #E7EDF7", ios: "storiesCardBackground", status: "done" },
-        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "hardcoded", status: "wrong" },
-        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "type-check hardcoded", status: "wrong" },
-        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "secondBackground", status: "done" },
-        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "hardcoded white", status: "wrong" },
-        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "storiesCardBorder token", status: "done" },
+        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "eventCardBackground token", status: "done" },
+        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "eventCardBackground token", status: "done" },
+        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "eventCardBorder token", status: "done" },
+        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "eventCardBorder token", status: "done" },
         { cat: "Colors", name: "header icons opacity", figma: "50%", ios: "needs verify", status: "progress" },
         { cat: "Typography", name: "title gradient", figma: "Manrope SemiBold 24px gradient", ios: "not implemented", status: "missing" },
         { cat: "Typography", name: "title tracking", figma: "-0.96px", ios: "not set", status: "missing" },
@@ -285,10 +286,10 @@ const DATA = {
       icon: "🎉",
       elements: [
         { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
-        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "type-check + hardcoded", status: "wrong" },
-        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "secondBackground", status: "done" },
-        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "hardcoded", status: "wrong" },
-        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "eventCardBackground token", status: "done" },
+        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "eventCardBackground token", status: "done" },
+        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "eventCardBorder token", status: "done" },
+        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "eventCardBorder token", status: "done" },
         { cat: "Colors", name: "stats text color", figma: "#8D93A1", ios: "hardcoded 0x8D93A1 ×4", status: "wrong" },
         { cat: "Colors", name: "'Интересует' gradient", figma: "A98AFF→7D50FF", ios: "applyThemeGradient()", status: "done" },
         { cat: "Colors", name: "'Пойду' text opacity", figma: "70%", ios: "needs verify", status: "progress" },
@@ -402,6 +403,52 @@ const DATA = {
 // ═══════════════════════════════════════════════════
 
 const CHANGELOG = [
+  {
+    date: "2026-03-29T17:30",
+    tag: "fix",
+    desc: "Replace hardcoded event card colors with eventCardBackground/Border tokens in AnnounceView",
+    items: [
+      { screen:"feed", name:"event card bg (dark)" },
+      { screen:"feed", name:"event card border (dark)" },
+      { screen:"feed", name:"event card border (light)" },
+      { screen:"events", name:"event card bg (dark)" },
+      { screen:"events", name:"event card border (dark)" },
+      { screen:"events", name:"event card border (light)" },
+    ]
+  },
+  {
+    date: "2026-03-29T17:20",
+    tag: "fix",
+    desc: "Replace hardcoded photo grid spacing (10.84px) and padding (12px) with layout tokens",
+    items: [
+      { screen:"profile", name:"photo grid gap" },
+      { screen:"profile", name:"screen padding horizontal" },
+    ]
+  },
+  {
+    date: "2026-03-29T17:10",
+    tag: "fix",
+    desc: "Replace hardcoded 0xDEDEFF → storiesCardBorder token in profile header + feed stories",
+    items: [
+      { screen:"profile", name:"stories card border" },
+      { screen:"feed", name:"stories card border" },
+    ]
+  },
+  {
+    date: "2026-03-29T17:00",
+    tag: "audit",
+    desc: "Profile audit: badge shadow, username font, name gradient, avatar glow were already implemented correctly",
+    items: [
+      { screen:"profile", name:"badge shadow (dark)" },
+      { screen:"profile", name:"badge shadow (light)" },
+      { screen:"profile", name:"username font" },
+      { screen:"profile", name:"name gradient text" },
+      { screen:"profile", name:"purple glow around avatar" },
+      { screen:"profile", name:"stats number font" },
+      { screen:"profile", name:"stats label font" },
+      { screen:"profile", name:"photo grid cell radius" },
+    ]
+  },
   {
     date: "2026-03-29T16:40",
     tag: "feat",
@@ -627,7 +674,7 @@ function renderChangelog() {
   document.getElementById("clCount").textContent = `(${CHANGELOG.length} updates)`;
 
   body.innerHTML = CHANGELOG.map((entry, idx) => {
-    const tagCls = entry.tag === "fix" ? "cl-tag cl-tag-fix" : "cl-tag";
+    const tagCls = entry.tag === "fix" ? "cl-tag cl-tag-fix" : entry.tag === "audit" ? "cl-tag cl-tag-audit" : "cl-tag";
     const chips = entry.items.map(it =>
       `<span class="cl-item" onclick="scrollToElement('${it.screen}','${it.name.replace(/'/g,"\\'")}')">${it.name}</span>`
     ).join("");
