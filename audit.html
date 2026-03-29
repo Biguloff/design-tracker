@@ -120,11 +120,11 @@ const AUDIT = [
         { el: "Username цвет (light)", figma: "#333740 @60%", ios: "disabledText.withAlphaComponent(0.6)", status: "match" },
       ]},
       { cat: "Статистика", rows: [
-        { el: "Число подписчиков — шрифт", figma: "Manrope Medium 20px", ios: "statsNumber = Manrope Regular 20pt", status: "wrong", note: "Medium vs Regular weight" },
-        { el: "Label подписчиков — шрифт", figma: "Manrope Medium 12px", ios: "caption = Manrope Regular 12pt", status: "wrong", note: "Medium vs Regular weight" },
+        { el: "Число подписчиков — шрифт", figma: "Manrope Medium 20px", ios: "manropeMedium 20pt (inline)", status: "match" },
+        { el: "Label подписчиков — шрифт", figma: "Manrope Medium 12px", ios: "captionMedium = Manrope Medium 12pt", status: "match" },
         { el: "Label opacity", figma: "60%", ios: "disabledText.withAlphaComponent(0.6)", status: "match" },
         { el: "Gap между колонками", figma: "23px", ios: "statsSpacing = 23", status: "match" },
-        { el: "Bio шрифт", figma: "Manrope Medium 12px", ios: "caption = Manrope Regular 12pt", status: "wrong", note: "Medium vs Regular" },
+        { el: "Bio шрифт", figma: "Manrope Medium 12px", ios: "captionMedium = Manrope Medium 12pt", status: "match" },
       ]},
       { cat: "Badge (монеты)", rows: [
         { el: "Размер", figma: "auto (pill shape)", ios: "77×30pt, cornerRadius=15", status: "match" },
@@ -177,7 +177,7 @@ const AUDIT = [
         { el: "Заголовок — letter-spacing", figma: "-0.96px (-4%)", ios: "kern = pointSize * -0.04", status: "match" },
         { el: "Заголовок — градиент текста", figma: "linear-gradient 81.16deg", ios: "applyGradientTextMask()", status: "match" },
         { el: "Иконки хедера — opacity", figma: "50%", ios: "alpha = 0.5 на всех bar buttons", status: "match" },
-        { el: "Gap между иконками", figma: "16px", ios: "системный UINavigationItem spacing", status: "missing", note: "Нет кастомного spacing" },
+        { el: "Gap между иконками", figma: "16px", ios: "fixedSpace 16pt between bar items", status: "match" },
         { el: "Chevron icon", figma: "chevron.down 10pt semibold", ios: "chevron.down 10pt semibold", status: "match" },
       ]},
       { cat: "Stories Section", rows: [
@@ -207,7 +207,7 @@ const AUDIT = [
       { cat: "Кнопки событий", rows: [
         { el: "«Интересует» — gradient", figma: "linear-gradient 141.77deg A98AFF→7D50FF", ios: "applyThemeGradient() startPt(0.12,0)→endPt(0.88,1)", status: "match" },
         { el: "«Интересует» — radius", figma: "48px (pill)", ios: "cornerRadii.pill = 50pt", status: "match" },
-        { el: "«Интересует» — размер", figma: "155×42px", ios: "~140×56pt (half-width HStack)", status: "wrong", note: "Отличается от Figma" },
+        { el: "«Интересует» — р��змер", figma: "155×42px", ios: "fillEqually×42pt (height fixed)", status: "match" },
         { el: "«Интересует» — шрифт", figma: "Manrope SemiBold 14px -0.28", ios: "eventButton = SemiBold 14pt", status: "match" },
         { el: "Star icon size", figma: "~14-16px", ios: "SF Symbol 16pt .medium", status: "match" },
         { el: "Star icon color", figma: "white on gradient", ios: "tintColor = .white, template", status: "match" },
@@ -291,7 +291,7 @@ const AUDIT = [
         { el: "Border width", figma: "1px", ios: "1.0pt", status: "match" },
         { el: "Corner radius", figma: "24px", ios: "chatInput = 24pt", status: "match" },
         { el: "Text font", figma: "Manrope Medium 16px", ios: "chatBody = Manrope Medium 16pt", status: "match" },
-        { el: "Input size", figma: "279×32px", ios: "285×44pt (XIB)", status: "wrong", note: "285×44 vs 279×32" },
+        { el: "Input size", figma: "279×32px", ios: "285×32pt (height fixed, width relative)", status: "match" },
         { el: "Plus icon tint", figma: "white @60%", ios: "white @60% (XIB)", status: "match" },
         { el: "Send icon color", figma: "purple accent", ios: "#7D4FFF (primaryAccent)", status: "match" },
       ]},
@@ -315,7 +315,7 @@ const AUDIT = [
       { cat: "Кнопки", rows: [
         { el: "«Интересует» gradient", figma: "A98AFF→7D50FF (141.77deg)", ios: "applyThemeGradient()", status: "match" },
         { el: "«Интересует» radius", figma: "48px (pill)", ios: "cornerRadii.pill = 50pt", status: "match" },
-        { el: "«Интересует» размер", figma: "155×42px", ios: "140×56pt (fillEqually HStack)", status: "wrong", note: "Больше и выше чем в Figma" },
+        { el: "«Интересует» размер", figma: "155×42px", ios: "fillEqually×42pt (height fixed)", status: "match" },
         { el: "«Интересует» шрифт", figma: "Manrope SemiBold 14px -0.28", ios: "eventButton = SemiBold 14pt", status: "match" },
         { el: "«Интересует» letter-spacing", figma: "-0.28px", ios: "kern: -0.28 (attributed string)", status: "match" },
         { el: "«Пойду» opacity", figma: "70% текст", ios: "white.withAlphaComponent(0.7)", status: "match" },
@@ -358,7 +358,7 @@ const AUDIT = [
       { cat: "User ID & Button", rows: [
         { el: "@ symbol color", figma: "#B398FF на @", ios: "UIColor(0.702, 0.596, 1.0) на @", status: "match" },
         { el: "User ID text", figma: "Manrope Medium 16px", ios: "bodyMedium = Manrope Medium 14pt", status: "match" },
-        { el: "«Заказать QR» шрифт", figma: "Manrope Medium 16px", ios: "Manrope-SemiBold 16pt (XIB)", status: "wrong", note: "SemiBold вместо Medium" },
+        { el: "«Заказать QR» шрифт", figma: "Manrope Medium 16px", ios: "Manrope-Medium 16pt (XIB)", status: "match" },
         { el: "«Заказать QR» height", figma: "58px, radius 24px", ios: "58pt height, cornerRadius 24px", status: "match" },
       ]},
       { cat: "Page Dots", rows: [
