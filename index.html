@@ -120,7 +120,10 @@ a { color:var(--accent-light); text-decoration:none; }
   <h1>QR Me — Figma → iOS Design Tracker</h1>
   <p>Pixel-perfect alignment progress: every element, every screen</p>
   <div class="updated">Last updated: <span id="lastUpdated">2026-03-29</span></div>
-  <div style="margin-top:12px"><a href="audit.html" style="background:var(--accent);color:white;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:600;display:inline-block">Full Design Audit &rarr;</a></div>
+  <div style="margin-top:12px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="audit.html" style="background:var(--accent);color:white;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:600;display:inline-block">Full Design Audit &rarr;</a>
+    <a href="layout.html" style="background:var(--bg2);color:var(--accent-light);border:1px solid var(--border);padding:8px 20px;border-radius:50px;font-size:13px;font-weight:600;display:inline-block">Layout & Effects &rarr;</a>
+  </div>
 </div>
 
 <!-- Dashboard Rings -->
@@ -277,8 +280,8 @@ const DATA = {
         { cat: "Effects", name: "header backdrop blur", figma: "blur 7px", ios: "UIVisualEffectView + тинт", status: "done" },
         { cat: "Effects", name: "input bar blur", figma: "blur 7px", ios: "tabBarBlurStyle", status: "done" },
         // --- BUGS ---
-        { cat: "Bugs", name: "media = empty bubbles", figma: "show image/video", ios: ".image/.video not handled", status: "missing" },
-        { cat: "Bugs", name: "two context menus on long press", figma: "one menu", ios: "system + custom overlap", status: "missing" },
+        { cat: "Bugs", name: "media = empty bubbles", figma: "show image/video", ios: "layout fix + heightForRowAt", status: "done" },
+        { cat: "Bugs", name: "two context menus on long press", figma: "one menu", ios: "UILongPressGestureRecognizer only", status: "done" },
       ]
     },
     {
@@ -408,6 +411,15 @@ const DATA = {
 // ═══════════════════════════════════════════════════
 
 const CHANGELOG = [
+  {
+    date: "2026-03-29T23:30",
+    tag: "fix",
+    desc: "Чат: 2 последних бага из аудита. (1) Media messages — пустые баблы: XIB collectionConteiner имел translatesAutoresizing=NO без constraints → высота 0. Фикс: re-enable frame layout + heightForRowAt. (2) Два контекстных меню: contextMenuConfigurationForRowAt триггерил system + custom overlay. Фикс: заменили на UILongPressGestureRecognizer, убрали system context menu.",
+    items: [
+      { screen:"chat", name:"media empty bubbles" },
+      { screen:"chat", name:"dual context menus" },
+    ]
+  },
   {
     date: "2026-03-29T22:00",
     tag: "fix",

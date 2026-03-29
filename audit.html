@@ -79,7 +79,10 @@ td.note { font-size:11px; color:var(--text2); max-width:300px; }
 <body>
 <div class="container">
 
-<a href="index.html" class="back-link">&larr; Назад к трекеру</a>
+<div style="display:flex;gap:12px;margin-bottom:16px">
+  <a href="index.html" class="back-link">&larr; Назад к трекеру</a>
+  <a href="layout.html" class="back-link">Layout & Effects &rarr;</a>
+</div>
 
 <div class="header">
   <h1>Full Design Audit: Figma vs iOS</h1>
@@ -296,8 +299,8 @@ const AUDIT = [
         { el: "Send icon color", figma: "purple accent", ios: "#7D4FFF (primaryAccent)", status: "match" },
       ]},
       { cat: "Bugs", rows: [
-        { el: "Media messages → пустые баблы", figma: "Показывать image/video", ios: ".image/.video типы не обработаны", status: "missing", note: "Нужна реализация MediaMessageTableViewCell" },
-        { el: "Два контекстных меню", figma: "Одно меню", ios: "system + custom overlap", status: "missing", note: "UIContextMenu + ContextView конфликтуют" },
+        { el: "Media messages → пустые баблы", figma: "Показывать image/video", ios: "translatesAutoresizing fix + heightForRowAt", status: "match", note: "XIB constraints fixed, frame layout restored" },
+        { el: "Два контекстных меню", figma: "Одно меню", ios: "UILongPressGestureRecognizer only", status: "match", note: "contextMenuConfigurationForRowAt removed" },
       ]},
     ]
   },
