@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Code Review: feature/pixel-perfect-tokens</title>
+<style>
+:root {
+  --bg: #08090B;
+  --bg2: #0C0D0F;
+  --bg3: #141517;
+  --accent: #7D4FFF;
+  --accent-light: #B298FF;
+  --green: #34C759;
+  --yellow: #FFB800;
+  --red: #FF3B30;
+  --orange: #FF9500;
+  --text: #FFFFFF;
+  --text2: #8D93A1;
+  --border: #29292E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif; line-height:1.6; }
+a { color:var(--accent-light); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:1100px; margin:0 auto; padding:24px 16px; }
+.back-link { display:inline-block; margin-bottom:16px; font-size:13px; }
+.header { text-align:center; padding:40px 0 24px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+.header h1 { font-size:28px; font-weight:700; background:linear-gradient(81.16deg, #FFF 37.23%, rgba(255,255,255,0.5) 81.25%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:8px; font-size:14px; }
+.meta { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--text2); }
+.meta span { background:var(--bg3); padding:4px 12px; border-radius:50px; border:1px solid var(--border); }
+
+/* Score ring */
+.score-section { display:flex; gap:32px; justify-content:center; align-items:center; flex-wrap:wrap; margin-bottom:40px; }
+.score-ring { width:120px; height:120px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; position:relative; }
+.score-ring::before { content:''; position:absolute; inset:0; border-radius:50%; border:4px solid var(--border); }
+.score-ring .num { font-size:36px; font-weight:700; line-height:1; }
+.score-ring .lbl { font-size:11px; color:var(--text2); margin-top:2px; }
+
+/* Rating bars */
+.ratings { display:flex; flex-direction:column; gap:8px; min-width:300px; }
+.rating-row { display:flex; align-items:center; gap:12px; }
+.rating-name { font-size:13px; min-width:170px; color:var(--text2); }
+.rating-bar { flex:1; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+.rating-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+.rating-val { font-size:13px; font-weight:600; min-width:35px; text-align:right; }
+
+/* Sections */
+.section { background:var(--bg2); border-radius:20px; margin-bottom:20px; border:1px solid var(--border); overflow:hidden; }
+.section-header { padding:18px 24px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.section-header:hover { background:var(--bg3); }
+.section-title { font-size:16px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.chevron { transition:transform 0.3s; font-size:18px; color:var(--text2); }
+.section-header.open .chevron { transform:rotate(90deg); }
+.section-body { padding:0 24px 20px; display:none; }
+.section-body.open { display:block; }
+
+/* Content */
+.finding { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin:10px 0; }
+.finding h4 { font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.finding p, .finding ul { font-size:13px; color:var(--text2); line-height:1.7; }
+.finding ul { padding-left:18px; }
+.finding li { margin:3px 0; }
+.finding code { background:var(--bg); padding:2px 6px; border-radius:4px; font-size:12px; font-family:'SF Mono',monospace; color:var(--accent-light); }
+.finding .bad { color:var(--red); }
+.finding .good { color:var(--green); }
+.finding .warn { color:var(--yellow); }
+
+/* Comparison table */
+.cmp-table { width:100%; border-collapse:collapse; font-size:13px; margin:12px 0; }
+.cmp-table th { text-align:left; padding:8px 12px; border-bottom:2px solid var(--border); color:var(--text2); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+.cmp-table td { padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; font-size:13px; }
+.cmp-table tr:last-child td { border-bottom:none; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 8px; border-radius:50px; font-size:11px; font-weight:600; }
+.b-p0 { background:rgba(255,59,48,0.15); color:var(--red); }
+.b-p1 { background:rgba(255,149,0,0.15); color:var(--orange); }
+.b-p2 { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.b-good { background:rgba(52,199,89,0.12); color:var(--green); }
+.b-bad { background:rgba(255,59,48,0.12); color:var(--red); }
+
+/* Code block */
+.code { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px; font-family:'SF Mono',monospace; font-size:12px; line-height:1.6; overflow-x:auto; margin:8px 0; white-space:pre; color:var(--text2); }
+
+/* Priority list */
+.prio-list { list-style:none; padding:0; }
+.prio-list li { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:13px; }
+.prio-list li:last-child { border-bottom:none; }
+.prio-list .badge { flex-shrink:0; margin-top:2px; }
+
+@media (max-width:768px) {
+  .score-section { flex-direction:column; }
+  .ratings { min-width:auto; width:100%; }
+  .rating-name { min-width:120px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="index.html">&larr; Назад к Design Tracker</a>
+
+<div class="header">
+  <h1>Code Review: feature/pixel-perfect-tokens</h1>
+  <p>Честная рецензия по гайду senior-разработчика</p>
+  <div class="meta">
+    <span>48 коммитов</span>
+    <span>43 файла</span>
+    <span>815 строк добавлено</span>
+    <span>284 строки удалено</span>
+    <span>2026-03-29</span>
+  </div>
+</div>
+
+<!-- Score -->
+<div class="score-section">
+  <div class="score-ring" style="border-color:var(--yellow)">
+    <div class="num" style="color:var(--yellow)">4.9</div>
+    <div class="lbl">из 10</div>
+  </div>
+  <div class="ratings">
+    <div class="rating-row">
+      <span class="rating-name">Системность</span>
+      <div class="rating-bar"><div class="rating-fill" style="width:50%;background:var(--yellow)"></div></div>
+      <span class="rating-val" style="color:var(--yellow)">5</span>
+    </div>
+    <div class="rating-row">
+      <span class="rating-name">Семантика</span>
+      <div class="rating-bar"><div class="rating-fill" style="width:70%;background:var(--green)"></div></div>
+      <span class="rating-val" style="color:var(--green)">7</span>
+    </div>
+    <div class="rating-row">
+      <span class="rating-name">Полнота</span>
+      <div class="rating-bar"><div class="rating-fill" style="width:40%;background:var(--orange)"></div></div>
+      <span class="rating-val" style="color:var(--orange)">4</span>
+    </div>
+    <div class="rating-row">
+      <span class="rating-name">Контраст / A11y</span>
+      <div class="rating-bar"><div class="rating-fill" style="width:30%;background:var(--red)"></div></div>
+      <span class="rating-val" style="color:var(--red)">3</span>
+    </div>
+    <div class="rating-row">
+      <span class="rating-name">Архитектура</span>
+      <div class="rating-bar"><div class="rating-fill" style="width:30%;background:var(--red)"></div></div>
+      <span class="rating-val" style="color:var(--red)">3</span>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Системность -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>1.</span> Системность — 5/10</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="finding">
+      <h4><span class="warn">&#9888;</span> Нарушен порядок: код раньше аудита</h4>
+      <p>Гайд: <em>«Сначала аудит → посчитали каждый хардкод-цвет → выявили семантику → расширили токены → мигрировали пакетно»</em></p>
+      <p>Факт: первые 5 коммитов — «пак 1...5» — сразу UI-код. Токены (<code>554970561</code>, <code>48645ed6c</code>) добавлялись <b>после</b> того как UI-код уже их требовал.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="warn">&#9888;</span> План появился только для последних 8 задач</h4>
+      <p>Файл <code>pp-10-layout-effects-fixes.md</code> — формальный план. Первые 40 коммитов шли без плана.</p>
+    </div>
+    <div class="finding">
+      <h4>&#128161; Как надо было</h4>
+      <p>1 коммит <code>audit: 137 hardcoded colors in 37 files</code> → 1 коммит <code>feat(tokens): add all missing tokens</code> → серия пакетных миграций по модулям.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Семантика -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>2.</span> Семантика — 7/10</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> Токены названы по смыслу</h4>
+      <ul>
+        <li><code>eventCardBackground</code>, <code>eventCardBorder</code>, <code>storiesCardBorder</code> — по назначению</li>
+        <li><code>chatContainerHeight</code>, <code>chatInput</code> — семантика компонента</li>
+        <li><code>GlassEffect</code>, <code>headingGradientEnabled</code> — описывают эффект, не значение</li>
+      </ul>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">&#10008;</span> Hardcoded hex в UI-коде — нарушение главного правила</h4>
+      <ul>
+        <li><code>UIColor(hex: 0x1D1D1D)</code> в MessengerViewController — должен быть токен <code>dateSeparatorBackground</code></li>
+        <li><code>UIColor(hex: 0x131416)</code> в MyQrViewController — должен быть <code>qrCardBackground</code></li>
+        <li><code>UIColor(hex: 0xDEDEFF)</code> в MyQrViewController — должен быть <code>storiesCardBorder</code></li>
+        <li><code>UIColor(red: 0.702, green: 0.596, blue: 1.0)</code> — должен быть <code>accentColor</code></li>
+      </ul>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">&#10008;</span> Magic tag numbers</h4>
+      <p><code>7701</code>, <code>8004</code>, <code>8005</code> — без именованных констант. Решение:</p>
+<div class="code">private enum ViewTag {
+    static let cardGlassBlur = 7701
+    static let chatPanelBlur = 8004
+    static let chatPanelGradient = 8005
+}</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Полнота -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>3.</span> Полнота — 4/10</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <table class="cmp-table">
+      <thead><tr><th>Паттерн</th><th>Осталось</th><th>Статус</th></tr></thead>
+      <tbody>
+        <tr><td><code>UIColor(red:)</code> вне тем</td><td>28 (22 палитра + <b>6 UI</b>)</td><td><span class="badge b-p1">6 пропущено</span></td></tr>
+        <tr><td><code>UIColor(hexString:)</code> вне тем</td><td>2 (Stories Widget)</td><td><span class="badge b-p2">data-driven</span></td></tr>
+        <tr><td><code>#colorLiteral</code></td><td>0</td><td><span class="badge b-good">Вычищено</span></td></tr>
+        <tr><td><code>.cgColor</code> без Combine-подписки</td><td>84 border/shadow</td><td><span class="badge b-p0">Критично</span></td></tr>
+        <tr><td>Новый hardcoded hex (регрессия)</td><td>4 штуки</td><td><span class="badge b-bad">Мы внесли</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 4. Контраст -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>4.</span> Контраст и доступность — 3/10</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="finding">
+      <h4><span class="bad">&#10008;</span> Не проверено в светлых темах</h4>
+      <p>Работали только с NewDark / NewLight / Default. У Таймураза 5 тем, включая светлые (Minimalist, Nature, Retro).</p>
+      <ul>
+        <li><code>UIColor(hex: 0xDEDEFF).cgColor</code> для бордера QR — <b>невидим на белом фоне</b> Minimalist</li>
+        <li><code>UIColor.white.cgColor</code> для borderColor в MyQR — <b>невидим на белом фоне</b></li>
+        <li><code>UIColor(hex: 0x131416)</code> для фона — <b>чёрный на тёплом фоне</b> Nature и Retro</li>
+        <li><b>0 тестов</b> во всех 5 темах</li>
+      </ul>
+    </div>
+    <div class="finding">
+      <h4>&#128161; Что гайд говорит</h4>
+      <p><em>«Контраст в светлых темах — если текст белый на тёмном фоне — в светлой теме он станет тёмным на светлом фоне. Проверяй читаемость.»</em></p>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Архитектура -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span>5.</span> Архитектура (Combine, CALayer) — 3/10</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <div class="finding">
+      <h4><span class="bad">&#10008;</span> 0 Combine-подписок — критический пропуск</h4>
+      <p>Гайд: <em>«Если ты используешь .cgColor (для CALayer) — нужна подписка, потому что CGColor — это не UIColor, он не обновляется автоматически»</em></p>
+      <p>Мы добавили <b>0</b> <code>ThemeManager.shared.$currentTheme</code> подписок. При этом внесли 11+ <code>.cgColor</code> assignments:</p>
+      <ul>
+        <li><code>topView.layer.borderColor = cardBorder.cgColor</code></li>
+        <li><code>middleView.layer.borderColor = cardBorder.cgColor</code></li>
+        <li><code>borderLayer.strokeColor = UIColor.storiesCardBorder.cgColor</code></li>
+        <li><code>gradientTint.colors = [UIColor.background...cgColor]</code></li>
+        <li><code>skipButton.layer.borderColor = UIColor.text.cgColor</code></li>
+      </ul>
+      <p><b>Все сломаются</b> при runtime-смене темы. Цвет установится один раз и не обновится.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="warn">&#9888;</span> 8 type checks по конкретным классам</h4>
+      <p><code>theme is NewDarkTheme || theme is NewLightTheme</code> — 8 мест. При добавлении 6-й темы — 8 потенциальных багов.</p>
+      <p>Правильнее: <code>glass.blurStyle != nil</code> или флаг <code>supportsGlassEffects: Bool</code> в ThemeProtocol.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="warn">&#9888;</span> lazy var blurView — одноразовая инициализация</h4>
+      <p>В Task 7 мы заменили <code>let</code> на <code>lazy var</code> чтобы получить доступ к <code>ThemeTokenStorage</code>. Blur style установится один раз при первом обращении и не обновится при смене темы.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Что хорошо -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span>6.</span> Что сделано хорошо</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> GlassEffect struct</h4>
+      <p>Элегантное решение: один struct описывает glass morphism. <code>nil</code> blurStyle отключает эффект для DefaultTheme. Повторяемый паттерн для будущих эффектов.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> ThemeLayout — 8 sub-structs</h4>
+      <p>sizes, gaps, padding, chatBubbleCorners — гранулярнее Таймураза (5 sub-structs). Ближе к Figma Variables.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> Gradient locations [0.1248, 0.8752]</h4>
+      <p>Точное соответствие Figma stops. Именно такие детали отличают pixel-perfect от «примерно».</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> UIUtilities.gradientLayer(locations:)</h4>
+      <p>Backward-compatible расширение с default <code>nil</code>. Не ломает существующие вызовы.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> #colorLiteral полностью вычищен</h4>
+      <p>0 осталось в кодовой базе. Один из немногих паттернов, вычищенных на 100%.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> Crash guards</h4>
+      <p>Array bounds checking, force cast → optional cast. Повышает стабильность за рамками дизайн-задачи.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="good">&#10004;</span> Design Tracker на GitHub Pages</h4>
+      <p>Внешний артефакт для команды. Прогресс видим без чтения git log.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 7. Что плохо -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>7.</span> Что сделано плохо или в лоб</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="finding">
+      <h4><span class="bad">1.</span> Hardcoded hex в UI-коде — регрессия</h4>
+      <p>4 новых <code>UIColor(hex:)</code> в UI-файлах. Мы сами нарушили правило, которое призваны были исправлять.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">2.</span> Magic tags без констант</h4>
+      <p><code>7701</code>, <code>8004</code>, <code>8005</code> — через месяц никто не вспомнит что это.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">3.</span> Type checks вместо токенов</h4>
+      <p><code>theme is NewDarkTheme || theme is NewLightTheme</code> — 8 мест. Нарушает принцип «семантика, не значение».</p>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">4.</span> 0 Combine-подписок при 11+ cgColor assignments</h4>
+      <p>Фундаментальный архитектурный пропуск. Runtime theme switching сломан.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">5.</span> lazy var вместо подписки</h4>
+      <p>В Task 7 — <code>lazy var blurView</code> с <code>ThemeTokenStorage</code>. Blur style не обновится при смене темы.</p>
+    </div>
+    <div class="finding">
+      <h4><span class="bad">6.</span> StoriesLineView не использован как эталон</h4>
+      <p>Гайд называет его «эталонной реализацией», но мы его не интегрировали и не копировали паттерн.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Альтернативный план -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span>8.</span> Что бы я сделал иначе</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <table class="cmp-table">
+      <thead><tr><th style="width:8%">Шаг</th><th style="width:30%">Действие</th><th>Описание</th></tr></thead>
+      <tbody>
+        <tr><td><b>1</b></td><td>Аудит (1 коммит)</td><td>grep всех хардкодов → зафиксировать: 137 в 37 файлах. Классифицировать по семантике.</td></tr>
+        <tr><td><b>2</b></td><td>Токены (1-2 коммита)</td><td>ВСЕ недостающие токены разом: colors + fonts + layout + effects. Не по одному в процессе.</td></tr>
+        <tr><td><b>3</b></td><td>Эталон (1 коммит)</td><td>Reference implementation с Combine-подписками, <code>applyTheme()</code>, без magic numbers.</td></tr>
+        <tr><td><b>4</b></td><td>Пакетная миграция</td><td>Chat → Events → Profile → QR → Auth. Каждый модуль — отдельный коммит.</td></tr>
+        <tr><td><b>5</b></td><td>Effects поверх</td><td>Glass, gradient locations, blur — после стабильной базы.</td></tr>
+        <tr><td><b>6</b></td><td>Валидация</td><td>Прогон чеклиста во <b>всех 5 темах</b>. Скриншоты.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Theory vs Practice -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span>&#9878;</span> Теория vs Практика</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <table class="cmp-table">
+      <thead><tr><th style="width:45%">Гайд говорит</th><th style="width:45%">Мы сделали</th><th style="width:10%"></th></tr></thead>
+      <tbody>
+        <tr><td>Сначала аудит</td><td>Сразу пак-коммиты с кодом</td><td><span class="badge b-bad">&#10008;</span></td></tr>
+        <tr><td>Расширить токены до миграции</td><td>Токены добавлялись по ходу</td><td><span class="badge b-bad">&#10008;</span></td></tr>
+        <tr><td>Не хардкодить hex в UI</td><td>4 новых hex в UI-коде</td><td><span class="badge b-bad">&#10008;</span></td></tr>
+        <tr><td>CALayer.cgColor → подписка на тему</td><td>0 подписок при 11+ assignments</td><td><span class="badge b-bad">&#10008;</span></td></tr>
+        <tr><td>Проверять во всех 5 темах</td><td>Проверяли только в 3</td><td><span class="badge b-p1">~</span></td></tr>
+        <tr><td>Эталонная реализация</td><td>Без эталона, каждый файл по-своему</td><td><span class="badge b-bad">&#10008;</span></td></tr>
+        <tr><td>Семантика, не значение</td><td>Токены хорошие, UI-код — нет</td><td><span class="badge b-p2">~</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Priorities -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span>&#9889;</span> Приоритеты исправления</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <ul class="prio-list">
+      <li><span class="badge b-p0">P0</span> Добавить Combine-подписки в каждый файл где мы используем <code>.cgColor</code> — blocking bug для runtime theme switching</li>
+      <li><span class="badge b-p0">P0</span> Вынести 4 hardcoded hex в токены: <code>0x1D1D1D</code> → dateSeparatorBg, <code>0x131416</code> → qrCardBackground, <code>0xDEDEFF</code> → storiesCardBorder, <code>0.702/0.596/1.0</code> → accentColor</li>
+      <li><span class="badge b-p1">P1</span> Заменить 8 <code>theme is NewDarkTheme</code> на token-based checks (<code>glass.blurStyle != nil</code>)</li>
+      <li><span class="badge b-p1">P1</span> Именованные константы для magic tags (7701, 8004, 8005)</li>
+      <li><span class="badge b-p2">P2</span> Проверить контраст во всех 5 темах после merge с Таймуразом</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Bottom line -->
+<div style="text-align:center;padding:32px 0;border-top:1px solid var(--border);margin-top:16px">
+  <p style="font-size:15px;color:var(--text2);max-width:700px;margin:0 auto">
+    Ветка делает реальную работу: pixel-perfect Figma-значения, GlassEffect, gradient locations, расширенный ThemeLayout.
+    Но архитектурно — <b style="color:var(--yellow)">не готова к runtime theme switching</b> (0 Combine-подписок),
+    содержит <b style="color:var(--red)">4 hardcoded hex</b> (регрессия), и не проверена в светлых темах.
+  </p>
+</div>
+
+</div>
+<script>
+function toggle(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open')}
+</script>
+</body>
+</html>
