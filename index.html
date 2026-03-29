@@ -88,6 +88,28 @@ a { color:var(--accent-light); text-decoration:none; }
 .stat { text-align:center; }
 .stat-num { font-size:28px; font-weight:700; }
 .stat-label { font-size:12px; color:var(--text2); }
+
+/* Changelog */
+.changelog { background:var(--bg2); border-radius:20px; border:1px solid var(--border); margin-bottom:32px; overflow:hidden; }
+.changelog-header { padding:16px 24px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.changelog-header:hover { background:var(--bg3); }
+.changelog-header h2 { font-size:18px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.changelog-body { padding:0 24px 20px; display:none; max-height:500px; overflow-y:auto; }
+.changelog-body.open { display:block; }
+.cl-entry { border-bottom:1px solid rgba(255,255,255,0.05); padding:14px 0; }
+.cl-entry:last-child { border-bottom:none; }
+.cl-time { font-size:12px; color:var(--accent-light); font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+.cl-time .cl-tag { background:rgba(52,199,89,0.15); color:var(--green); padding:2px 8px; border-radius:50px; font-size:10px; font-weight:700; text-transform:uppercase; }
+.cl-time .cl-tag-fix { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.cl-desc { font-size:14px; font-weight:500; margin-bottom:6px; }
+.cl-items { display:flex; flex-wrap:wrap; gap:6px; }
+.cl-item { background:var(--bg3); border:1px solid var(--border); padding:3px 10px; border-radius:50px; font-size:11px; color:var(--text2); cursor:pointer; transition:all 0.2s; }
+.cl-item:hover { border-color:var(--accent); color:var(--accent-light); background:rgba(125,79,255,0.1); }
+.el-highlight { animation: highlightPulse 2s ease-out; }
+@keyframes highlightPulse {
+  0% { background:rgba(125,79,255,0.3); }
+  100% { background:transparent; }
+}
 </style>
 </head>
 <body>
@@ -104,6 +126,15 @@ a { color:var(--accent-light); text-decoration:none; }
 
 <!-- Stats -->
 <div class="stats-bar" id="statsBar"></div>
+
+<!-- Changelog -->
+<div class="changelog">
+  <div class="changelog-header" onclick="toggleChangelog()">
+    <h2>📋 Changelog <span style="font-size:13px;color:var(--text2);font-weight:400" id="clCount"></span></h2>
+    <span class="chevron" id="clChevron">›</span>
+  </div>
+  <div class="changelog-body" id="changelogBody"></div>
+</div>
 
 <!-- Filters -->
 <div class="filters">
@@ -365,6 +396,106 @@ const DATA = {
 };
 
 // ═══════════════════════════════════════════════════
+// CHANGELOG — Add new entries at the TOP.
+// tag: "feat" | "fix" | "refactor" | "audit"
+// items: [{ screen:"screen_id", name:"element name" }]
+// ═══════════════════════════════════════════════════
+
+const CHANGELOG = [
+  {
+    date: "2026-03-29T16:40",
+    tag: "feat",
+    desc: "Add layout tokens: SizesTokens, GapsTokens, PaddingTokens + 3 corner radii",
+    items: [
+      { screen:"tokens", name:"cornerRadii.eventCard" },
+      { screen:"tokens", name:"cornerRadii.photoGrid" },
+      { screen:"tokens", name:"cornerRadii.tabbarTop" },
+      { screen:"tokens", name:"sizes.avatarMessage" },
+      { screen:"tokens", name:"sizes.avatarStories" },
+      { screen:"tokens", name:"sizes.tabbarIcon" },
+      { screen:"tokens", name:"gaps.storiesItem" },
+      { screen:"tokens", name:"gaps.photoGrid" },
+      { screen:"tokens", name:"padding.screenHorizontal" },
+      { screen:"tokens", name:"padding.cardHorizontal" },
+    ]
+  },
+  {
+    date: "2026-03-29T16:30",
+    tag: "feat",
+    desc: "Add 9 font tokens from Figma typography.json",
+    items: [
+      { screen:"tokens", name:"bodyMedium" },
+      { screen:"tokens", name:"captionMedium" },
+      { screen:"tokens", name:"messagePreview" },
+      { screen:"tokens", name:"messageDate" },
+      { screen:"tokens", name:"statsNumber" },
+      { screen:"tokens", name:"statsLabel" },
+      { screen:"tokens", name:"eventTitle" },
+      { screen:"tokens", name:"eventButton" },
+      { screen:"tokens", name:"sectionLabel" },
+    ]
+  },
+  {
+    date: "2026-03-29T16:20",
+    tag: "feat",
+    desc: "Add 7 color tokens: eventCard, swipeMore, gradient, separator, storiesCardBorder",
+    items: [
+      { screen:"tokens", name:"bg/event-card token" },
+      { screen:"tokens", name:"bg/swipe-more token" },
+      { screen:"tokens", name:"heading gradient start/end" },
+      { screen:"tokens", name:"inline/separator" },
+      { screen:"tokens", name:"stories card border" },
+    ]
+  },
+  {
+    date: "2026-03-29T16:10",
+    tag: "fix",
+    desc: "Correct 4 color values to match Figma colors.json",
+    items: [
+      { screen:"tokens", name:"chat/input-bg dark" },
+      { screen:"tokens", name:"chat/input-bg light" },
+      { screen:"tokens", name:"text/message-date dark" },
+      { screen:"tokens", name:"bg/swipe-archive" },
+      { screen:"chat", name:"input bg (dark)" },
+      { screen:"chat", name:"input bg (light)" },
+      { screen:"messages", name:"swipe archive bg" },
+    ]
+  },
+  {
+    date: "2026-03-29T15:50",
+    tag: "fix",
+    desc: "Replace #colorLiteral with UIColor.primaryAccent in 2 CommentReactionCell files",
+    items: [
+      { screen:"crashes", name:"Cyrillic var name — MediaMessageCell" },
+    ]
+  },
+  {
+    date: "2026-03-29T15:40",
+    tag: "fix",
+    desc: "Replace 7 force casts (as!) with safe optional casts (as?) in MessengerVC cellForRowAt",
+    items: [
+      { screen:"crashes", name:"Force cast — cellForItemAt" },
+    ]
+  },
+  {
+    date: "2026-03-29T15:30",
+    tag: "fix",
+    desc: "Add array bounds checking in StoryPrepareVC cellForItemAt",
+    items: [
+      { screen:"crashes", name:"Array bounds — StoryPrepareVC" },
+    ]
+  },
+  {
+    date: "2026-03-29T15:20",
+    tag: "fix",
+    desc: "Fix lifecycle bug: super.viewDidDisappear → super.viewWillDisappear in ChatsVC",
+    items: [
+      { screen:"crashes", name:"Lifecycle bug — ChatsVC:96" },
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════
 // RENDER ENGINE
 // ═══════════════════════════════════════════════════
 
@@ -479,10 +610,80 @@ function filterElements(status) {
   });
 }
 
+// ═══════════════════════════════════════════════════
+// CHANGELOG RENDER
+// ═══════════════════════════════════════════════════
+
+function formatCLDate(iso) {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("ru-RU", { day:"numeric", month:"short", year:"numeric" });
+  const time = d.toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
+  return `${day}, ${time}`;
+}
+
+function renderChangelog() {
+  const tagLabels = { feat:"feature", fix:"fix", refactor:"refactor", audit:"audit" };
+  const body = document.getElementById("changelogBody");
+  document.getElementById("clCount").textContent = `(${CHANGELOG.length} updates)`;
+
+  body.innerHTML = CHANGELOG.map((entry, idx) => {
+    const tagCls = entry.tag === "fix" ? "cl-tag cl-tag-fix" : "cl-tag";
+    const chips = entry.items.map(it =>
+      `<span class="cl-item" onclick="scrollToElement('${it.screen}','${it.name.replace(/'/g,"\\'")}')">${it.name}</span>`
+    ).join("");
+    return `
+      <div class="cl-entry">
+        <div class="cl-time">
+          ${formatCLDate(entry.date)}
+          <span class="${tagCls}">${tagLabels[entry.tag]||entry.tag}</span>
+        </div>
+        <div class="cl-desc">${entry.desc}</div>
+        <div class="cl-items">${chips}</div>
+      </div>`;
+  }).join("");
+}
+
+function toggleChangelog() {
+  const body = document.getElementById("changelogBody");
+  const chev = document.getElementById("clChevron");
+  body.classList.toggle("open");
+  chev.style.transform = body.classList.contains("open") ? "rotate(90deg)" : "";
+}
+
+function scrollToElement(screenId, elName) {
+  // Open the screen section
+  const els = document.getElementById("els-" + screenId);
+  const hdr = els.previousElementSibling;
+  if (!els.classList.contains("open")) {
+    els.classList.add("open");
+    hdr.classList.add("open");
+  }
+  // Find the element by name text
+  const allEls = els.querySelectorAll(".element");
+  for (const el of allEls) {
+    const nameDiv = el.querySelector(".el-name");
+    if (nameDiv && nameDiv.textContent.trim() === elName) {
+      el.scrollIntoView({ behavior:"smooth", block:"center" });
+      el.classList.remove("el-highlight");
+      void el.offsetWidth; // trigger reflow
+      el.classList.add("el-highlight");
+      return;
+    }
+  }
+  // Fallback: just scroll to the screen
+  document.getElementById("screen-" + screenId)?.scrollIntoView({ behavior:"smooth" });
+}
+
 // Init
 const stats = calcStats();
 renderDashboard(stats);
 renderScreens(stats);
+renderChangelog();
+
+// Update last-updated from latest changelog entry
+if (CHANGELOG.length) {
+  document.getElementById("lastUpdated").textContent = formatCLDate(CHANGELOG[0].date);
+}
 </script>
 </body>
 </html>
