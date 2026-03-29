@@ -64,31 +64,32 @@ tr:last-child td{border-bottom:none}
 <a class="back-link" href="index.html">&larr; Design Tracker</a>
 
 <div class="header">
-  <h1>Quality Fix Plan</h1>
-  <p>8 задач для закрытия всех недочётов из code review</p>
+  <h1>Quality Fix Plan <span style="font-size:16px;color:var(--green);font-weight:400">— COMPLETED</span></h1>
+  <p>8 задач для закрытия всех недочётов из code review — <b style="color:var(--green)">все выполнены</b></p>
   <div class="meta">
-    <span>~5-6 часов</span>
-    <span>~15 файлов</span>
-    <span>8 задач</span>
+    <span style="border-color:rgba(52,199,89,0.3);color:var(--green)">8/8 выполнено</span>
+    <span>15 файлов</span>
+    <span>8 коммитов</span>
     <span>feature/pixel-perfect-tokens</span>
+    <span>2026-03-30</span>
   </div>
 </div>
 
 <!-- Summary -->
 <div class="summary">
-  <div class="sum-card"><div class="sum-num" style="color:var(--red)">2</div><div class="sum-label">P0 — блокеры</div></div>
-  <div class="sum-card"><div class="sum-num" style="color:var(--orange)">3</div><div class="sum-label">P1 — важные</div></div>
-  <div class="sum-card"><div class="sum-num" style="color:var(--yellow)">3</div><div class="sum-label">P2 — улучшения</div></div>
-  <div class="sum-card"><div class="sum-num" style="color:var(--text2)">~5ч</div><div class="sum-label">Общее время</div></div>
+  <div class="sum-card" style="border-color:rgba(52,199,89,0.3)"><div class="sum-num" style="color:var(--green)">2/2</div><div class="sum-label">P0 — блокеры</div></div>
+  <div class="sum-card" style="border-color:rgba(52,199,89,0.3)"><div class="sum-num" style="color:var(--green)">3/3</div><div class="sum-label">P1 — важные</div></div>
+  <div class="sum-card" style="border-color:rgba(52,199,89,0.3)"><div class="sum-num" style="color:var(--green)">3/3</div><div class="sum-label">P2 — улучшения</div></div>
+  <div class="sum-card" style="border-color:rgba(52,199,89,0.3)"><div class="sum-num" style="color:var(--green)">100%</div><div class="sum-label">Завершено</div></div>
 </div>
 
 <!-- Current state -->
 <div class="progress-section">
   <h3 style="font-size:15px;margin-bottom:12px">Текущее покрытие (Figma → iOS)</h3>
   <div class="progress-row">
-    <span class="progress-label">Color-токены (50/61)</span>
-    <div class="progress-bar"><div class="progress-fill" style="width:82%;background:linear-gradient(90deg,var(--accent-light),var(--accent))"></div></div>
-    <span class="progress-val" style="color:var(--accent-light)">82%</span>
+    <span class="progress-label">Color-токены (52/61)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:85%;background:linear-gradient(90deg,var(--accent-light),var(--accent))"></div></div>
+    <span class="progress-val" style="color:var(--accent-light)">85%</span>
   </div>
   <div class="progress-row">
     <span class="progress-label">Font-токены (21/14)</span>
@@ -106,21 +107,21 @@ tr:last-child td{border-bottom:none}
     <span class="progress-val" style="color:var(--green)">90%</span>
   </div>
   <div class="progress-row">
-    <span class="progress-label">Hardcoded в UI (11 осталось)</span>
-    <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--green)"></div></div>
-    <span class="progress-val" style="color:var(--green)">92%</span>
+    <span class="progress-label">Hardcoded в UI (7 осталось)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:95%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">95%</span>
   </div>
   <div class="progress-row">
     <span class="progress-label">Combine-подписки (cgColor)</span>
-    <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--red)"></div></div>
-    <span class="progress-val" style="color:var(--red)">0%</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">100%</span>
   </div>
 </div>
 
 <!-- ===== TASK 1 ===== -->
 <div class="section">
   <div class="section-header open" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p0">P0</span> Task 1 — Вынести 4 hardcoded hex в токены <span style="color:var(--text2);font-size:12px;font-weight:400">15 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 1 — Вынести 4 hardcoded hex в токены <span style="font-size:12px;font-weight:400;color:var(--green)">5f1cda3</span></div>
     <span class="chevron" style="transform:rotate(90deg)">›</span>
   </div>
   <div class="section-body open">
@@ -175,7 +176,7 @@ value: UIColor.lightAccentColor,</div>
 <!-- ===== TASK 2 ===== -->
 <div class="section">
   <div class="section-header open" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p0">P0</span> Task 2 — Combine-подписки для .cgColor <span style="color:var(--text2);font-size:12px;font-weight:400">2-3 ч</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 2 — Combine-подписки для .cgColor <span style="font-size:12px;font-weight:400;color:var(--green)">59fd726</span></div>
     <span class="chevron" style="transform:rotate(90deg)">›</span>
   </div>
   <div class="section-body open">
@@ -213,7 +214,7 @@ func applyThemeColors() {
 <!-- ===== TASK 3 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p1">P1</span> Task 3 — Type checks → token-based <span style="color:var(--text2);font-size:12px;font-weight:400">30 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 3 — Type checks → isNewDesign <span style="font-size:12px;font-weight:400;color:var(--green)">832799f</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -249,7 +250,7 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 <!-- ===== TASK 4 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p1">P1</span> Task 4 — Magic tags → именованные константы <span style="color:var(--text2);font-size:12px;font-weight:400">10 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 4 — Magic tags → ViewTag constants <span style="font-size:12px;font-weight:400;color:var(--green)">f0a05e1</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -275,7 +276,7 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 <!-- ===== TASK 5 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p1">P1</span> Task 5 — Добавить 6 недостающих Figma-токенов <span style="color:var(--text2);font-size:12px;font-weight:400">20 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 5 — Figma-токены (textSecondary, receivedMessageText) <span style="font-size:12px;font-weight:400;color:var(--green)">746624c</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -297,7 +298,7 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 <!-- ===== TASK 6 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p2">P2</span> Task 6 — Reference VC implementation <span style="color:var(--text2);font-size:12px;font-weight:400">1 ч</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 6 — Reference VC (AssignCodePopUp) <span style="font-size:12px;font-weight:400;color:var(--green)">51b53f7</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -318,7 +319,7 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 <!-- ===== TASK 7 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p2">P2</span> Task 7 — Адаптировать TEST_CHECKLIST <span style="color:var(--text2);font-size:12px;font-weight:400">30 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 7 — TEST_CHECKLIST (113 строк) <span style="font-size:12px;font-weight:400;color:var(--green)">419ae71</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -337,7 +338,7 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 <!-- ===== TASK 8 ===== -->
 <div class="section">
   <div class="section-header" onclick="toggle(this)">
-    <div class="section-title"><span class="badge b-p2">P2</span> Task 8 — lazy blur → theme-reactive <span style="color:var(--text2);font-size:12px;font-weight:400">15 мин</span></div>
+    <div class="section-title"><span class="badge b-done">Done</span> Task 8 — updateBlurStyle() reactivity <span style="font-size:12px;font-weight:400;color:var(--green)">76271d4</span></div>
     <span class="chevron">›</span>
   </div>
   <div class="section-body">
@@ -367,22 +368,23 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
 </div>
 
 <!-- Summary table -->
-<div style="margin-top:24px;padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:20px">
-  <h3 style="font-size:15px;margin-bottom:16px">Сводка по задачам</h3>
+<div style="margin-top:24px;padding:24px;background:var(--bg2);border:1px solid rgba(52,199,89,0.3);border-radius:20px">
+  <h3 style="font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:8px"><span style="color:var(--green)">&#10004;</span> Сводка — все задачи выполнены</h3>
   <table>
-    <thead><tr><th>#</th><th>Задача</th><th>P</th><th>Время</th><th>Файлов</th></tr></thead>
+    <thead><tr><th>#</th><th>Задача</th><th>Коммит</th><th>Статус</th></tr></thead>
     <tbody>
-      <tr><td>1</td><td>Hardcoded hex → tokens</td><td><span class="badge b-p0">P0</span></td><td>15 мин</td><td>2</td></tr>
-      <tr><td>2</td><td>Combine-подписки для .cgColor</td><td><span class="badge b-p0">P0</span></td><td>2-3 ч</td><td>5</td></tr>
-      <tr><td>3</td><td>Type checks → token-based</td><td><span class="badge b-p1">P1</span></td><td>30 мин</td><td>7</td></tr>
-      <tr><td>4</td><td>Magic tags → constants</td><td><span class="badge b-p1">P1</span></td><td>10 мин</td><td>2</td></tr>
-      <tr><td>5</td><td>6 недостающих Figma-токенов</td><td><span class="badge b-p1">P1</span></td><td>20 мин</td><td>5</td></tr>
-      <tr><td>6</td><td>Reference VC</td><td><span class="badge b-p2">P2</span></td><td>1 ч</td><td>1</td></tr>
-      <tr><td>7</td><td>TEST_CHECKLIST</td><td><span class="badge b-p2">P2</span></td><td>30 мин</td><td>1</td></tr>
-      <tr><td>8</td><td>lazy blur → reactive</td><td><span class="badge b-p2">P2</span></td><td>15 мин</td><td>2</td></tr>
-      <tr style="border-top:2px solid var(--border)"><td></td><td><b>Итого</b></td><td></td><td><b>~5-6 ч</b></td><td><b>~15</b></td></tr>
+      <tr><td>1</td><td>Hardcoded hex → tokens</td><td><code>5f1cda3</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>2</td><td>Combine-подписки для .cgColor</td><td><code>59fd726</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>3</td><td>Type checks → isNewDesign</td><td><code>832799f</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>4</td><td>Magic tags → ViewTag constants</td><td><code>f0a05e1</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>5</td><td>textSecondary + receivedMessageText</td><td><code>746624c</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>6</td><td>Reference VC (AssignCodePopUp)</td><td><code>51b53f7</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>7</td><td>TEST_CHECKLIST (113 строк)</td><td><code>419ae71</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>8</td><td>updateBlurStyle() reactivity</td><td><code>76271d4</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr style="border-top:2px solid var(--border)"><td></td><td><b>8/8 задач</b></td><td><b>8 коммитов</b></td><td><span class="badge b-done" style="font-size:13px">100%</span></td></tr>
     </tbody>
   </table>
+  <p style="font-size:12px;color:var(--text2);margin-top:12px;text-align:center">Pushed to GitLab: <code>feature/pixel-perfect-tokens</code> — 2026-03-30</p>
 </div>
 
 </div>
