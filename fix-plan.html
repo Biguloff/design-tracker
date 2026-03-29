@@ -67,7 +67,7 @@ tr:last-child td{border-bottom:none}
   <h1>Quality Fix Plan <span style="font-size:16px;color:var(--green);font-weight:400">— COMPLETED</span></h1>
   <p>8 задач для закрытия всех недочётов из code review — <b style="color:var(--green)">все выполнены</b></p>
   <div class="meta">
-    <span style="border-color:rgba(52,199,89,0.3);color:var(--green)">8/8 выполнено</span>
+    <span style="border-color:rgba(52,199,89,0.3);color:var(--green)">8/8 + 3 bonus</span>
     <span>15 файлов</span>
     <span>8 коммитов</span>
     <span>feature/pixel-perfect-tokens</span>
@@ -113,6 +113,11 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="progress-row">
     <span class="progress-label">Combine-подписки (cgColor)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">100%</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Blur styles theme-aware (0 hardcoded)</span>
     <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
     <span class="progress-val" style="color:var(--green)">100%</span>
   </div>
@@ -382,7 +387,9 @@ let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...<
       <tr><td>7</td><td>TEST_CHECKLIST (113 строк)</td><td><code>419ae71</code></td><td><span class="badge b-done">Done</span></td></tr>
       <tr><td>8</td><td>updateBlurStyle() reactivity</td><td><code>76271d4</code></td><td><span class="badge b-done">Done</span></td></tr>
       <tr><td>9</td><td>Last 3 hardcoded hex (coinsShadow, storiesCardBorder, accent)</td><td><code>3c88da3</code></td><td><span class="badge b-done">Done</span></td></tr>
-      <tr style="border-top:2px solid var(--border)"><td></td><td><b>8/8 задач + bonus</b></td><td><b>9 коммитов</b></td><td><span class="badge b-done" style="font-size:13px">100%</span></td></tr>
+      <tr><td>10</td><td>Tab bar: remove duplicate blur, lower tint alpha</td><td><code>b5be1fb</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr><td>11</td><td>All blur styles → theme-aware + dead code cleanup</td><td><code>b881576</code></td><td><span class="badge b-done">Done</span></td></tr>
+      <tr style="border-top:2px solid var(--border)"><td></td><td><b>8/8 задач + 3 bonus</b></td><td><b>11 коммитов</b></td><td><span class="badge b-done" style="font-size:13px">100%</span></td></tr>
     </tbody>
   </table>
   <p style="font-size:12px;color:var(--text2);margin-top:12px;text-align:center">Pushed to GitLab: <code>feature/pixel-perfect-tokens</code> — 2026-03-30</p>
