@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Layout & Effects Audit</title>
+<style>
+:root {
+  --bg: #08090B;
+  --bg2: #0C0D0F;
+  --bg3: #141517;
+  --accent: #7D4FFF;
+  --accent-light: #B298FF;
+  --green: #34C759;
+  --yellow: #FFB800;
+  --red: #FF3B30;
+  --blue: #0A84FF;
+  --text: #FFFFFF;
+  --text2: #8D93A1;
+  --border: #29292E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif; line-height:1.5; }
+a { color:var(--accent-light); text-decoration:none; }
+.container { max-width:1400px; margin:0 auto; padding:24px 16px; }
+
+/* Header */
+.header { text-align:center; padding:40px 0 32px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+.header h1 { font-size:28px; font-weight:700; background:linear-gradient(81.16deg,#FFF 37.23%,rgba(255,255,255,0.5) 81.25%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:8px; font-size:14px; }
+.nav-links { margin-top:16px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.nav-links a { background:var(--bg2); border:1px solid var(--border); padding:8px 20px; border-radius:50px; font-size:13px; font-weight:600; transition:all 0.2s; }
+.nav-links a:hover, .nav-links a.active { background:var(--accent); color:white; border-color:var(--accent); }
+
+/* Dashboard */
+.dashboard { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:32px; }
+.stat-card { background:var(--bg2); border-radius:16px; padding:20px 28px; text-align:center; border:1px solid var(--border); min-width:120px; }
+.stat-card .num { font-size:32px; font-weight:700; }
+.stat-card .lbl { font-size:12px; color:var(--text2); margin-top:4px; }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; margin-bottom:24px; background:var(--bg2); border-radius:50px; padding:4px; border:1px solid var(--border); overflow-x:auto; }
+.tab { padding:10px 20px; border-radius:50px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text2); white-space:nowrap; transition:all 0.2s; }
+.tab:hover { color:var(--text); }
+.tab.active { background:var(--accent); color:white; }
+
+/* Sections */
+.section { background:var(--bg2); border-radius:20px; margin-bottom:24px; border:1px solid var(--border); overflow:hidden; display:none; }
+.section.visible { display:block; }
+.section-header { padding:20px 24px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.section-header:hover { background:var(--bg3); }
+.section-title { font-size:18px; font-weight:600; display:flex; align-items:center; gap:12px; }
+.section-body { padding:0 24px 20px; display:none; }
+.section-body.open { display:block; }
+.chevron { transition:transform 0.3s; font-size:20px; color:var(--text2); }
+.section-header.open .chevron { transform:rotate(90deg); }
+
+/* Tables */
+.audit-table { width:100%; border-collapse:collapse; font-size:12px; }
+.audit-table th { text-align:left; padding:10px 8px; color:var(--accent-light); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid var(--border); position:sticky; top:0; background:var(--bg2); }
+.audit-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.audit-table tr:hover td { background:rgba(125,79,255,0.04); }
+td.el { font-weight:500; min-width:140px; }
+td.figma { color:var(--accent-light); font-family:'SF Mono',monospace; font-size:11px; }
+td.ios { color:var(--text2); font-family:'SF Mono',monospace; font-size:11px; }
+td.note { font-size:11px; color:var(--text2); max-width:200px; }
+
+/* Status badges */
+.badge { padding:3px 10px; border-radius:50px; font-size:10px; font-weight:700; text-transform:uppercase; white-space:nowrap; }
+.b-match { background:rgba(52,199,89,0.15); color:var(--green); }
+.b-wrong { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.b-missing { background:rgba(255,59,48,0.15); color:var(--red); }
+.b-hardcoded { background:rgba(10,132,255,0.15); color:var(--blue); }
+.b-partial { background:rgba(255,184,0,0.15); color:var(--yellow); }
+
+/* Category divider */
+.cat-row td { padding:14px 8px 6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); border-bottom:1px solid var(--border); background:var(--bg3); }
+
+/* Gradient previews */
+.grad-preview { height:24px; border-radius:6px; min-width:100px; border:1px solid rgba(255,255,255,0.1); }
+.blur-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; backdrop-filter:blur(4px); background:rgba(255,255,255,0.1); }
+
+/* Responsive */
+@media (max-width:900px) {
+  .audit-table { font-size:11px; }
+  td.note { display:none; }
+  .stat-card { min-width:80px; padding:12px 16px; }
+  .stat-card .num { font-size:24px; }
+}
+
+/* Filter */
+.filters { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.filter-btn { background:var(--bg3); border:1px solid var(--border); color:var(--text2); padding:5px 12px; border-radius:50px; cursor:pointer; font-size:12px; transition:all 0.2s; }
+.filter-btn:hover,.filter-btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+
+/* Search */
+.search { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:10px 16px; border-radius:50px; font-size:14px; width:100%; max-width:400px; margin-bottom:24px; outline:none; }
+.search:focus { border-color:var(--accent); }
+.search::placeholder { color:var(--text2); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>QR Me — Layout & Effects Audit</h1>
+  <p>Размеры, отступы, градиенты, blur, glass — Figma vs iOS</p>
+  <div class="nav-links">
+    <a href="index.html">Design Tracker</a>
+    <a href="audit.html">Color Audit</a>
+    <a href="layout.html" class="active">Layout & Effects</a>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard"></div>
+
+<!-- Search -->
+<input class="search" type="text" placeholder="Поиск элементов..." oninput="filterSearch(this.value)" id="search">
+
+<!-- Tabs -->
+<div class="tabs" id="tabs"></div>
+
+<!-- Filter -->
+<div class="filters">
+  <button class="filter-btn active" onclick="filterStatus('all')">All</button>
+  <button class="filter-btn" onclick="filterStatus('match')">Match</button>
+  <button class="filter-btn" onclick="filterStatus('wrong')">Wrong</button>
+  <button class="filter-btn" onclick="filterStatus('missing')">Missing</button>
+  <button class="filter-btn" onclick="filterStatus('hardcoded')">Hardcoded</button>
+</div>
+
+<!-- Content -->
+<div id="content"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// LAYOUT & EFFECTS DATA
+// ═══════════════════════════════════════════════════
+
+const DATA = {
+  tabs: [
+    // ─── DIMENSIONS ──────────────────────────────
+    {
+      id: "dimensions",
+      name: "Dimensions",
+      icon: "📐",
+      sections: [
+        { screen: "Profile", rows: [
+          { cat: "Avatar" },
+          { el: "Avatar size", figma: "154 x 154", ios: "154 x 154 (ThemeLayout.profileHeader.avatarSize)", status: "match" },
+          { el: "Avatar shape", figma: "hexagon (NewThemes)", ios: ".hexagon (AvatarView)", status: "match" },
+          { el: "Avatar default (legacy)", figma: "130 x 130 circle", ios: "130 x 130 (DefaultTheme)", status: "match" },
+          { el: "Hexagon corner radius", figma: "~8px", ios: "8.0 hardcoded in AvatarView", status: "hardcoded", note: "Should use cornerRadii.small" },
+          { cat: "Header" },
+          { el: "Header height", figma: "200px (NewThemes)", ios: "200 (ThemeLayout.profileHeader.headerHeight)", status: "match" },
+          { el: "Header height (legacy)", figma: "260px", ios: "260 (DefaultTheme)", status: "match" },
+          { el: "Content area width", figma: "363px centered", ios: "Constraints to superview -12 each side", status: "match" },
+          { cat: "Badge" },
+          { el: "Badge container", figma: "77 x 30", ios: "Dynamic (intrinsic size)", status: "match" },
+          { el: "Badge corner radius", figma: "50px (pill)", ios: "cornerRadii.pill = 50", status: "match" },
+          { el: "Badge star icon", figma: "22 x 22", ios: "22 x 22 in XIB", status: "match" },
+          { cat: "Stats" },
+          { el: "Stats gap between columns", figma: "23px", ios: "23 (ThemeLayout.gaps.statColumns = 23)", status: "match" },
+          { el: "Stats number font", figma: "Manrope Medium 20px", ios: "ThemeFonts.statsNumber 20pt Medium", status: "match" },
+          { el: "Stats label font", figma: "Manrope Medium 12px", ios: "ThemeFonts.statsLabel 12pt Medium", status: "match" },
+          { cat: "Photo Grid" },
+          { el: "Grid columns", figma: "3", ios: "3 column layout", status: "match" },
+          { el: "Grid gap", figma: "10.84px", ios: "10.84 (ThemeLayout.gaps.photoGrid)", status: "match" },
+          { el: "Grid padding", figma: "12px", ios: "12 (ThemeLayout.padding.photoGrid)", status: "match" },
+          { el: "Photo cell size", figma: "~111.4 x 111.4", ios: "Computed: (375-24-21.68)/3", status: "match" },
+          { el: "Photo corner radius", figma: "8px", ios: "cornerRadii.photoGrid = 8", status: "match" },
+          { cat: "Action Buttons (Other Profile)" },
+          { el: "Button height", figma: "40px", ios: "40 in XIB", status: "match" },
+          { el: "Button corner radius", figma: "10px", ios: "10 in code", status: "match" },
+          { el: "Button gap", figma: "8px", ios: "8 (stackView spacing)", status: "match" },
+          { el: "Container width", figma: "253px", ios: "253 constraint", status: "match" },
+          { el: "Add icon", figma: "10 x 10", ios: "10 x 10", status: "match" },
+          { el: "Chat icon", figma: "13 x 13", ios: "13 x 13", status: "match" },
+        ]},
+        { screen: "Feed", rows: [
+          { cat: "Header" },
+          { el: "Header horizontal padding", figma: "12px", ios: "12 (padding.screenHorizontal)", status: "match" },
+          { el: "Title font", figma: "Manrope SemiBold 24px", ios: "ThemeFonts.headingLarge 24pt", status: "match" },
+          { el: "Title letter-spacing", figma: "-0.96px", ios: "kern: 24 * -0.04 = -0.96", status: "match" },
+          { el: "Action icons size", figma: "20 x 20", ios: "20 x 20 (SF Symbols)", status: "match" },
+          { el: "Action icons gap", figma: "16px", ios: "16 (fixedSpace barButtonItem)", status: "match" },
+          { el: "Action icons opacity", figma: "50%", ios: "0.5 alpha", status: "match" },
+          { cat: "Stories Section" },
+          { el: "Container border", figma: "1px solid #DEDEFF", ios: "1px storiesCardBorder", status: "match" },
+          { el: "Container corner radius", figma: "24px", ios: "cornerRadii.stories = 24", status: "match" },
+          { el: "Container height", figma: "130px", ios: "130 constraint", status: "match" },
+          { el: "Container padding top", figma: "24px", ios: "24 (padding.cardVerticalTop)", status: "match" },
+          { el: "Container padding bottom", figma: "16px", ios: "16 (padding.cardVerticalBottom)", status: "match" },
+          { el: "Container padding horizontal", figma: "24px", ios: "24 (padding.cardHorizontal)", status: "match" },
+          { el: "Story items gap", figma: "20px", ios: "20 (gaps.storiesItem)", status: "match" },
+          { el: "Create button size", figma: "64 x 64", ios: "64 (sizes.storiesAddCircle)", status: "match" },
+          { el: "Story avatars", figma: "64 x 64", ios: "64 (sizes.avatarStories)", status: "match" },
+          { el: "Story label font", figma: "Manrope Medium 12px", ios: "captionMedium 12pt", status: "match" },
+          { cat: "Event Card" },
+          { el: "Card corner radius", figma: "32px", ios: "cornerRadii.eventCard = 32", status: "match" },
+          { el: "Card height", figma: "470px", ios: "~470 (computed from content)", status: "match" },
+          { el: "Card gap (between cards)", figma: "10px", ios: "10 (gaps.feedItems)", status: "match" },
+          { el: "Event image height", figma: "188px", ios: "188 constraint", status: "match" },
+          { el: "User avatar in card", figma: "40 x 40", ios: "40 (sizes.avatarFeed)", status: "match" },
+          { el: "User avatar radius", figma: "20px", ios: "20 (half of 40)", status: "match" },
+          { el: "'Интересует' button", figma: "155.4 x 42", ios: "155 x 42 (dynamic)", status: "match" },
+          { el: "'Интересует' radius", figma: "48px", ios: "50 (cornerRadii.pill)", status: "wrong", note: "Figma says 48px, iOS uses pill=50" },
+          { el: "'Пойду' button", figma: "155.4 x 42", ios: "155 x 42 (dynamic)", status: "match" },
+          { el: "'Пойду' radius", figma: "10px", ios: "10 in code", status: "match" },
+          { el: "Star icon in button", figma: "20 x 20", ios: "20 x 20", status: "match" },
+          { el: "Button text font", figma: "Manrope SemiBold 14px", ios: "ThemeFonts.eventButton 14pt SemiBold", status: "match" },
+          { el: "Button letter-spacing", figma: "-0.28px", ios: "kern: -0.28", status: "match" },
+          { el: "Event title font", figma: "Manrope Regular 15px", ios: "ThemeFonts.eventTitle 15pt", status: "match" },
+          { el: "Calendar/Location icon", figma: "24 x 24", ios: "24 x 24 SF Symbols", status: "match" },
+        ]},
+        { screen: "Messages", rows: [
+          { cat: "Layout" },
+          { el: "Chat row height", figma: "85px (inner 74px)", ios: "~85 auto-size", status: "match" },
+          { el: "Avatar size", figma: "52 x 52", ios: "52 (sizes.avatarMessage)", status: "match" },
+          { el: "Avatar left margin", figma: "16px", ios: "16 (padding.messageRowLeft)", status: "match" },
+          { el: "Avatar-to-text gap", figma: "12px", ios: "12 (gaps.avatarText)", status: "match" },
+          { el: "Separator width", figma: "296px", ios: "296 constraint", status: "match" },
+          { el: "Separator left", figma: "79px", ios: "79 from leading", status: "match" },
+          { cat: "Swipe Actions" },
+          { el: "Swipe button size", figma: "74 x 74", ios: "74 x 74", status: "match" },
+          { el: "Swipe font", figma: "SF Pro 14px", ios: "SF Pro 14pt", status: "match" },
+          { cat: "Typography" },
+          { el: "Chat name font", figma: "Manrope Medium 16px", ios: "ThemeFonts.messageName 16pt", status: "match" },
+          { el: "Message preview font", figma: "Manrope Regular 12px", ios: "ThemeFonts.messagePreview 12pt", status: "match" },
+          { el: "Date font", figma: "Manrope Regular 14px", ios: "ThemeFonts.messageDate 14pt", status: "match" },
+          { el: "Read indicator", figma: "~16.8 x 10.2", ios: "system checkmark image", status: "match" },
+        ]},
+        { screen: "Chat", rows: [
+          { cat: "Header" },
+          { el: "Header height", figma: "87px", ios: "ThemeTokenStorage.layout.sizes.chatContainerHeight", status: "match" },
+          { el: "Header padding horizontal", figma: "24px", ios: "24 in XIB", status: "match" },
+          { el: "Header padding vertical", figma: "12px", ios: "12 in XIB", status: "match" },
+          { el: "Back arrow size", figma: "11.8 x 21", ios: "system back button", status: "match" },
+          { el: "Chat avatar", figma: "44 x 44 hexagonal", ios: "44 x 44 AvatarView", status: "match" },
+          { el: "Contact name font", figma: "Manrope Medium 16px", ios: "ThemeFonts.messageName 16pt", status: "match" },
+          { el: "Subtitle font", figma: "Manrope Regular 12px", ios: "captionRegular 12pt", status: "match" },
+          { cat: "Messages" },
+          { el: "Bubble max width", figma: "~66% screen", ios: "2/3 screen (bounds.width/3*2)", status: "match" },
+          { el: "Bubble min width", figma: "—", ios: "75pt min constraint", status: "match" },
+          { el: "Message text font", figma: "Manrope Medium 16px", ios: "ThemeFonts.chatBody 16pt", status: "match" },
+          { el: "Timestamp font", figma: "11px, opacity 0.3", ios: "ThemeFonts.chatTime 11pt", status: "match" },
+          { el: "Date separator font", figma: "Manrope Medium 12px", ios: "ThemeFonts.caption 12pt", status: "match" },
+          { el: "Date separator radius", figma: "8px", ios: "cornerRadii.small = 8", status: "match" },
+          { el: "Sent bubble corners", figma: "16/16/16/4", ios: "chatBubbleSentCorners 16/16/16/4", status: "match" },
+          { el: "Received bubble corners", figma: "16/16/4/16", ios: "chatBubbleReceivedCorners 16/16/4/16", status: "match" },
+          { cat: "Input Bar" },
+          { el: "Input bar height", figma: "87px", ios: "ThemeTokenStorage.layout.sizes.chatContainerHeight", status: "match" },
+          { el: "Input bar padding horizontal", figma: "24px", ios: "24 in XIB", status: "match" },
+          { el: "Input field size", figma: "279 x 32", ios: "285 x 32 (height via token)", status: "wrong", note: "Width differs: 279 vs 285 (6px)" },
+          { el: "Input field border radius", figma: "24px", ios: "cornerRadii.chatInput = 24", status: "match" },
+          { el: "Input field border width", figma: "1px", ios: "1.0", status: "match" },
+          { el: "Attachment icon", figma: "18.6 x 18.6", ios: "~19 x 19 SF Symbol", status: "match" },
+          { el: "Microphone icon", figma: "15.7 x 23.1", ios: "~16 x 23 SF Symbol", status: "match" },
+          { el: "Elements gap", figma: "15px", ios: "~15 from constraints", status: "match" },
+        ]},
+        { screen: "QR", rows: [
+          { cat: "QR Card" },
+          { el: "Card size", figma: "341 x 341", ios: "341 x 341 (via collectionView cell)", status: "match" },
+          { el: "Card corner radius", figma: "32px", ios: "cornerRadii.eventCard = 32", status: "match" },
+          { el: "QR pattern size", figma: "298 x 298", ios: "Computed from cell size", status: "match" },
+          { el: "QR ME logo", figma: "90 x 90", ios: "90 x 90 centered", status: "match" },
+          { cat: "Order Button" },
+          { el: "Button height", figma: "58px", ios: "58 constraint", status: "match" },
+          { el: "Button corner radius", figma: "24px", ios: "ThemeTokenStorage.layout.cornerRadii.chatInput", status: "match" },
+          { el: "Icon size", figma: "24 x 24", ios: "24 x 24", status: "match" },
+          { el: "Button text font", figma: "Manrope Medium 16px", ios: "Medium 16pt", status: "match" },
+          { el: "Icon-text gap", figma: "12px", ios: "12 stackView spacing", status: "match" },
+          { cat: "Tab Switcher" },
+          { el: "Container radius", figma: "48px", ios: "48 hardcoded", status: "match" },
+          { el: "Container padding", figma: "6px", ios: "6 insets", status: "match" },
+          { el: "Active tab size", figma: "150 x 42", ios: "~150 x 42 (computed)", status: "match" },
+          { el: "Active tab radius", figma: "48px", ios: "48 hardcoded", status: "match" },
+          { el: "Tab label font", figma: "Manrope Medium 16px", ios: "Medium 16pt", status: "match" },
+          { el: "Items gap", figma: "16px", ios: "16 spacing", status: "match" },
+          { cat: "User ID" },
+          { el: "User ID font", figma: "Manrope Medium 16px", ios: "Medium 16pt", status: "match" },
+          { el: "@ symbol color", figma: "#B398FF", ios: "#B398FF hardcoded", status: "match" },
+          { el: "ID to pageControl gap", figma: "12px", ios: "12 constraint", status: "match" },
+          { el: "Pagination dots", figma: "40 x 6", ios: "UIPageControl (standard)", status: "match" },
+        ]},
+        { screen: "Tab Bar", rows: [
+          { cat: "Layout" },
+          { el: "Height (NewThemes)", figma: "76px", ios: "76 (ThemeLayout.tabBar.height)", status: "match" },
+          { el: "Height (Default)", figma: "72px", ios: "72 (DefaultTheme)", status: "match" },
+          { el: "Tab icons size", figma: "20 x 20", ios: "20 (sizes.tabbarIcon)", status: "match" },
+          { el: "QR center button", figma: "65 x 65", ios: "65 (tabBar.middleButtonSize)", status: "match" },
+          { el: "QR button top inset", figma: "8px", ios: "8 (tabBar.middleButtonTopInset)", status: "match" },
+          { el: "Padding horizontal", figma: "24px", ios: "24 (padding.tabbarHorizontal)", status: "match" },
+          { el: "Padding bottom", figma: "12px", ios: "12 (padding.tabbarVertical)", status: "match" },
+          { el: "Top corner radius", figma: "16px", ios: "cornerRadii.tabbarTop = 16 (token exists)", status: "match", note: "Нужна проверка применения" },
+          { el: "Profile avatar", figma: "32 x 32", ios: "32 x 32 in tab", status: "match" },
+        ]},
+      ]
+    },
+
+    // ─── SPACING ──────────────────────────────
+    {
+      id: "spacing",
+      name: "Spacing Tokens",
+      icon: "📏",
+      sections: [
+        { screen: "Spacing Scale", rows: [
+          { cat: "Base Scale" },
+          { el: "xs", figma: "4px", ios: "ThemeLayout.spacing.xs = 4", status: "match" },
+          { el: "sm", figma: "8px", ios: "ThemeLayout.spacing.sm = 8", status: "match" },
+          { el: "md", figma: "16px", ios: "ThemeLayout.spacing.md = 16", status: "match" },
+          { el: "lg", figma: "24px", ios: "ThemeLayout.spacing.lg = 24", status: "match" },
+          { el: "xl", figma: "32px", ios: "ThemeLayout.spacing.xl = 32", status: "match" },
+        ]},
+        { screen: "Corner Radii (NewThemes)", rows: [
+          { el: "small", figma: "8px", ios: "cornerRadii.small = 8", status: "match" },
+          { el: "medium", figma: "12px", ios: "cornerRadii.medium = 12", status: "match" },
+          { el: "large", figma: "20px", ios: "cornerRadii.large = 20", status: "match" },
+          { el: "stories", figma: "24px", ios: "cornerRadii.stories = 24", status: "match" },
+          { el: "pill", figma: "50px", ios: "cornerRadii.pill = 50", status: "match" },
+          { el: "chatInput", figma: "24px", ios: "cornerRadii.chatInput = 24", status: "match" },
+          { el: "eventButton", figma: "32px", ios: "cornerRadii.eventButton = 32", status: "match" },
+          { el: "eventCard", figma: "32px", ios: "cornerRadii.eventCard = 32", status: "match" },
+          { el: "photoGrid", figma: "8px", ios: "cornerRadii.photoGrid = 8", status: "match" },
+          { el: "tabbarTop", figma: "16px", ios: "cornerRadii.tabbarTop = 16", status: "match" },
+        ]},
+        { screen: "Gaps", rows: [
+          { el: "section", figma: "30px", ios: "gaps.section = 30", status: "match" },
+          { el: "storiesItem", figma: "20px", ios: "gaps.storiesItem = 20", status: "match" },
+          { el: "photoGrid", figma: "10.84px", ios: "gaps.photoGrid = 10.84", status: "match" },
+          { el: "cardInner", figma: "16px", ios: "gaps.cardInner = 16", status: "match" },
+          { el: "feedItems", figma: "10px", ios: "gaps.feedItems = 10", status: "match" },
+          { el: "statColumns", figma: "23px", ios: "gaps.statColumns = 23", status: "match" },
+          { el: "actionButtons", figma: "4px", ios: "gaps.actionButtons = 4", status: "match" },
+          { el: "avatarText", figma: "12px", ios: "gaps.avatarText = 12", status: "match" },
+          { el: "iconGroup", figma: "16px", ios: "gaps.iconGroup = 16", status: "match" },
+          { el: "nameEditIcon", figma: "10px", ios: "gaps.nameEditIcon = 10", status: "match" },
+        ]},
+        { screen: "Padding", rows: [
+          { el: "screenHorizontal", figma: "12px", ios: "padding.screenHorizontal = 12", status: "match" },
+          { el: "cardHorizontal", figma: "24px", ios: "padding.cardHorizontal = 24", status: "match" },
+          { el: "cardVerticalTop", figma: "24px", ios: "padding.cardVerticalTop = 24", status: "match" },
+          { el: "cardVerticalBottom", figma: "16px", ios: "padding.cardVerticalBottom = 16", status: "match" },
+          { el: "tabbarHorizontal", figma: "24px", ios: "padding.tabbarHorizontal = 24", status: "match" },
+          { el: "tabbarVertical", figma: "12px", ios: "padding.tabbarVertical = 12", status: "match" },
+          { el: "buttonHorizontal", figma: "12px", ios: "padding.buttonHorizontal = 12", status: "match" },
+          { el: "buttonVertical", figma: "6px", ios: "padding.buttonVertical = 6", status: "match" },
+          { el: "photoGrid", figma: "12px", ios: "padding.photoGrid = 12", status: "match" },
+          { el: "messageRowLeft", figma: "16px", ios: "padding.messageRowLeft = 16", status: "match" },
+        ]},
+      ]
+    },
+
+    // ─── GRADIENTS ──────────────────────────────
+    {
+      id: "gradients",
+      name: "Gradients",
+      icon: "🌈",
+      sections: [
+        { screen: "Button Gradients", rows: [
+          { cat: "Primary Button (Интересует / Active Tab)" },
+          { el: "Gradient colors", figma: "#A98AFF → #7D50FF", ios: "UIColor.gradientStart → gradientEnd", status: "match" },
+          { el: "Gradient angle", figma: "141.77deg", ios: "startPoint(0.12,0) → endPoint(0.88,1)", status: "match" },
+          { el: "Stop 1 position", figma: "12.48%", ios: "locations = [0.1248, 0.8752]", status: "match" },
+          { el: "Stop 2 position", figma: "87.52%", ios: "locations = [0.1248, 0.8752]", status: "match" },
+          { cat: "Create Story Button" },
+          { el: "Gradient colors", figma: "#A88AFF → #7D50FF", ios: "gradientStart → gradientEnd", status: "match" },
+          { el: "Gradient angle", figma: "135deg", ios: "135deg (diagonal)", status: "match" },
+        ]},
+        { screen: "Heading Text Gradients", rows: [
+          { cat: "Dark Theme" },
+          { el: "Feed heading", figma: "97.53deg, #FFF → rgba(255,255,255,0.5)", ios: "applyThemeGradientTextColor()", status: "match" },
+          { el: "Events heading", figma: "106.23deg, #FFF → rgba(255,255,255,0.5)", ios: "same gradient util", status: "match" },
+          { el: "Messages heading", figma: "108.63deg, #FFF → rgba(255,255,255,0.5)", ios: "same gradient util", status: "match" },
+          { el: "Profile name", figma: "81.16deg, #FFF → rgba(255,255,255,0.5)", ios: "same gradient util", status: "match" },
+          { cat: "Light Theme" },
+          { el: "Feed heading", figma: "86.39deg, #000 → rgba(0,0,0,0.5)", ios: "applyThemeGradientTextColor()", status: "match" },
+          { el: "Events heading", figma: "82.09deg, #000 → rgba(0,0,0,0.5)", ios: "same gradient util", status: "match" },
+          { el: "Messages heading", figma: "80.86deg, #000 → rgba(0,0,0,0.5)", ios: "same gradient util", status: "match" },
+          { el: "Profile name", figma: "81.16deg, #000 → rgba(0,0,0,0.5)", ios: "same gradient util", status: "match" },
+          { cat: "Per-Screen Angle Differences" },
+          { el: "Feed vs Profile angle", figma: "97.53deg vs 81.16deg", ios: "single angle for all headings", status: "wrong", note: "iOS использует один угол для всех — Figma задает разные углы по экранам" },
+          { cat: "headingGradientEnabled Flag" },
+          { el: "ThemeEffects flag", figma: "gradient on New themes", ios: "headingGradientEnabled: Bool", status: "match" },
+        ]},
+        { screen: "Tab Bar Overlay", rows: [
+          { el: "Direction", figma: "vertical (bottom → transparent)", ios: "startPoint(0.5,0) → endPoint(0.5,1)", status: "match" },
+          { el: "Dark: colors", figma: "#000000 → transparent", ios: "background.withAlpha(0) → (1)", status: "match" },
+          { el: "Light: colors", figma: "#FFFFFF → transparent", ios: "background.withAlpha(0) → (1)", status: "match" },
+          { el: "Height", figma: "tabBar height", ios: "ThemeLayout.tabBar.height", status: "match" },
+        ]},
+        { screen: "Background Decorative Glows", rows: [
+          { el: "Glow type", figma: "Radial gradient ellipses", ios: "ThemeBackgroundView (2 radial layers)", status: "match" },
+          { el: "Glow 1 position", figma: "upper-left", ios: "(-50, -30, 250x200)", status: "match" },
+          { el: "Glow 2 position", figma: "upper-right", ios: "(bounds.width-150, 20, 200x180)", status: "match" },
+          { el: "Glow color (dark)", figma: "accentPrimary @ 15%", ios: "accentPrimary @ 0.15", status: "match" },
+          { el: "Glow color (light)", figma: "accentPrimary @ 8%", ios: "accentPrimary @ 0.08", status: "match" },
+          { el: "Visibility (Default)", figma: "hidden", ios: "hidden", status: "match" },
+        ]},
+        { screen: "Missing Gradients", rows: [
+          { cat: "Not Implemented" },
+          { el: "Sent bubble gradient (light)", figma: "Purple gradient SVG shape", ios: "Solid #D0C0FF", status: "missing", note: "Light theme sent bubbles should have gradient" },
+          { el: "Event card bg gradient", figma: "Subtle glass effect", ios: "Solid rgba or hex", status: "missing", note: "Cards should have subtle gradient overlay" },
+          { el: "Story ring gradient", figma: "#A88AFF → #7D50FF around circle", ios: "Dominant color gradient (different approach)", status: "wrong", note: "iOS uses image-extracted colors instead of fixed gradient" },
+        ]},
+      ]
+    },
+
+    // ─── BLUR & GLASS ──────────────────────────────
+    {
+      id: "blur",
+      name: "Blur & Glass",
+      icon: "🪟",
+      sections: [
+        { screen: "Blur Effects (Theme-Aware)", rows: [
+          { cat: "Tab Bar Blur" },
+          { el: "Figma spec", figma: "backdrop-blur: 7px", ios: "UIVisualEffectView", status: "match" },
+          { el: "Dark style", figma: "blur 7px + dark overlay", ios: ".dark", status: "match" },
+          { el: "Light style", figma: "blur 7px + light overlay", ios: ".systemUltraThinMaterialLight", status: "match" },
+          { el: "Default style", figma: "no blur", ios: "nil (no blur)", status: "match" },
+          { el: "Blur radius token", figma: "7px (design), 14 (render)", ios: "tabBarBlurRadius = 14", status: "match" },
+          { cat: "Chat Header Blur" },
+          { el: "Figma spec", figma: "backdrop-blur: 7px + gradient overlay", ios: "UIVisualEffectView conditional", status: "match" },
+          { el: "Alpha overlay", figma: "bg → transparent gradient", ios: "CAGradientLayer 0→0.85 alpha", status: "match" },
+          { cat: "Chat Input Bar Blur" },
+          { el: "Figma spec", figma: "backdrop-blur: 7px + gradient overlay", ios: "UIVisualEffectView", status: "match" },
+          { el: "Alpha overlay", figma: "bg → transparent gradient", ios: "CAGradientLayer 0→0.85 alpha", status: "match" },
+        ]},
+        { screen: "Blur Effects (Hardcoded)", rows: [
+          { cat: "Non-Theme-Aware Blurs" },
+          { el: "Text editor blur", figma: "—", ios: "ThemeTokenStorage.effects.tabBarBlurStyle", status: "match" },
+          { el: "QR scanner blur", figma: "—", ios: ".systemThinMaterialDark hardcoded", status: "hardcoded", note: "QrReaderViewController.swift:110" },
+          { el: "AI onboarding blur", figma: "—", ios: ".dark hardcoded + bg@0.5", status: "hardcoded", note: "AIOnboardingViewController.swift:27" },
+          { el: "Message actions blur", figma: "—", ios: "ThemeTokenStorage.effects.tabBarBlurStyle", status: "match" },
+          { el: "Context menu blur", figma: "—", ios: "Via XIB, not theme-aware", status: "hardcoded", note: "QRContextView blurView outlet" },
+        ]},
+        { screen: "Glass Effects (Missing)", rows: [
+          { cat: "Figma Glass / Frosted Effects" },
+          { el: "Event card glass overlay", figma: "bg rgba(255,255,255,0.05) + blur", ios: "GlassEffect token + UIVisualEffectView", status: "match" },
+          { el: "QR card glass overlay", figma: "bg rgba(255,255,255,0.05) + border white", ios: "Solid bg, no glass", status: "missing", note: "QR card should have frosted glass" },
+          { el: "Tab switcher glass", figma: "#131416 + border #DEDEFF", ios: "Solid bg, no blur", status: "missing", note: "Tab switcher background should be glass" },
+          { el: "Stories card glass", figma: "border #DEDEFF + subtle bg", ios: "Solid bg, no blur", status: "missing", note: "Stories container should have glass effect" },
+          { el: "Badge glass effect", figma: "bg #141517 + shadow + border white", ios: "Solid bg", status: "missing", note: "Coin badge should have glass morphism" },
+        ]},
+      ]
+    },
+
+    // ─── SHADOWS ──────────────────────────────
+    {
+      id: "shadows",
+      name: "Shadows",
+      icon: "💫",
+      sections: [
+        { screen: "Shadow Tokens", rows: [
+          { el: "shadowLevel1", figma: "black @12%, (0,1), blur 3", ios: "ThemeEffects.shadowLevel1", status: "match" },
+          { el: "shadowLevel2", figma: "black @16%, (0,2), blur 8", ios: "ThemeEffects.shadowLevel2", status: "match" },
+          { el: "shadowLevel3", figma: "black @20%, (0,4), blur 16", ios: "ThemeEffects.shadowLevel3", status: "match" },
+          { el: "shadowLevel4", figma: "black @24%, (0,8), blur 32", ios: "ThemeEffects.shadowLevel4", status: "match" },
+          { el: "accentGlow (NewThemes)", figma: "#7D4FFF @90%, (0,0), blur 45", ios: "ThemeEffects.accentGlow", status: "match" },
+          { el: "accentGlow (Default)", figma: "none", ios: "clear @0, (0,0), blur 0", status: "match" },
+        ]},
+        { screen: "Per-Screen Shadows", rows: [
+          { cat: "Profile Badge Shadow" },
+          { el: "Dark theme", figma: "0 8px 13px rgba(0,0,0,0.5)", ios: "black @0.5, offset(0,8), blur 13", status: "match" },
+          { el: "Light theme", figma: "0 8px 13px #B5BECD", ios: "#B5BECD @1.0, offset(0,8), blur 13", status: "match" },
+          { el: "Using token?", figma: "—", ios: "Hardcoded per-theme in ProfileVC", status: "hardcoded", note: "Should use ThemeEffects token" },
+          { cat: "Sent Message Bubble Shadow" },
+          { el: "Shadow spec", figma: "SVG shadow layer under bubble", ios: "No shadow on sent bubbles", status: "missing", note: "Figma shows shadow under sent msg bubbles" },
+          { cat: "Text Editor Shadow" },
+          { el: "Shadow spec", figma: "—", ios: "black @0.8, (0,1), blur 4 — hardcoded", status: "hardcoded", note: "QRmeDraggableTextView — not theme-aware" },
+        ]},
+      ]
+    },
+
+    // ─── HARDCODED VALUES ──────────────────────────────
+    {
+      id: "hardcoded",
+      name: "Hardcoded Values",
+      icon: "🔧",
+      sections: [
+        { screen: "Layout Constants (Not Tokenized)", rows: [
+          { cat: "MyQR Screen" },
+          { el: "Order button corner radius", figma: "24px", ios: "ThemeTokenStorage.layout.cornerRadii.chatInput", status: "match" },
+          { el: "Collection view inset", figma: "—", ios: "UIEdgeInsets(0,120,0,120)", status: "hardcoded", note: "MyQrViewController:183 — not responsive" },
+          { el: "User ID label height", figma: "auto", ios: "24 constraint", status: "hardcoded", note: "MyQrViewController:144" },
+          { cat: "Chat Screen" },
+          { el: "Container height", figma: "87px", ios: "87 hardcoded", status: "hardcoded", note: "MessengerVC:627" },
+          { el: "Reply message top spacing", figma: "—", ios: "5 hardcoded", status: "hardcoded", note: "Line 873" },
+          { el: "Reply label trailing", figma: "—", ios: "10 hardcoded", status: "hardcoded", note: "Line 892" },
+          { el: "Tagging height", figma: "32px", ios: "32 hardcoded", status: "hardcoded", note: "Line 1063" },
+          { el: "Swipe cancel threshold", figma: "—", ios: "60 hardcoded", status: "hardcoded", note: "Line 83" },
+          { cat: "Story Screen" },
+          { el: "Stack bottom constraint", figma: "—", ios: "82.0 hardcoded", status: "hardcoded", note: "StoryPrepareVC:245" },
+          { el: "Publish border color", figma: "—", ios: "RGB(0.376,0.82,0.49) hardcoded", status: "hardcoded", note: "Line 152-153" },
+          { cat: "Profile Screen" },
+          { el: "Pencil icon size", figma: "20 x 20", ios: "CGRect(0,0,20,20) hardcoded", status: "hardcoded", note: "NewProfileHeaderView — should be sizes token" },
+          { el: "No content image spacing", figma: "16px / 24px", ios: "16, 24 hardcoded", status: "hardcoded", note: "ProfileNoContentView:97-98" },
+          { cat: "Feed Screen" },
+          { el: "Empty state image size", figma: "98 x 98", ios: "98 x 98 hardcoded", status: "hardcoded", note: "EndFeedCell:103-104" },
+          { el: "Compact image size", figma: "66 x 77", ios: "66 x 77 hardcoded", status: "hardcoded", note: "EndFeedCell:122-123" },
+          { cat: "Media Editor" },
+          { el: "Draggable text blur radius", figma: "—", ios: "12 hardcoded", status: "hardcoded", note: "QRmeDraggableTextView" },
+          { el: "Photo thumb size", figma: "—", ios: "80 x 80 / 80 x 100", status: "hardcoded", note: "QRmePhotoEditorVC" },
+          { el: "Video thumb size", figma: "—", ios: "70 x 90", status: "hardcoded", note: "QRmeVideoEditorVC" },
+        ]},
+      ]
+    },
+  ]
+};
+
+// ═══════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════
+
+let activeTab = "dimensions";
+let activeFilter = "all";
+let searchQuery = "";
+
+function statusIcon(s) {
+  return { match:"\u2705", wrong:"\u26A0\uFE0F", missing:"\u274C", hardcoded:"\uD83D\uDD27", partial:"\u26A0\uFE0F" }[s] || "\u2753";
+}
+function statusBadge(s) {
+  const labels = { match:"Match", wrong:"Wrong", missing:"Missing", hardcoded:"Hardcoded", partial:"Partial" };
+  const cls = { match:"b-match", wrong:"b-wrong", missing:"b-missing", hardcoded:"b-hardcoded", partial:"b-partial" };
+  return `<span class="badge ${cls[s]||''}">${labels[s]||s}</span>`;
+}
+
+function calcStats() {
+  let total=0, match=0, wrong=0, missing=0, hardcoded=0;
+  DATA.tabs.forEach(tab => {
+    tab.sections.forEach(sec => {
+      sec.rows.forEach(r => {
+        if (r.cat) return;
+        total++;
+        if (r.status==="match") match++;
+        else if (r.status==="wrong") wrong++;
+        else if (r.status==="missing") missing++;
+        else if (r.status==="hardcoded") hardcoded++;
+      });
+    });
+  });
+  return { total, match, wrong, missing, hardcoded, pct: total ? Math.round(match/total*100) : 0 };
+}
+
+function renderDashboard() {
+  const s = calcStats();
+  document.getElementById("dashboard").innerHTML = `
+    <div class="stat-card"><div class="num">${s.total}</div><div class="lbl">Total Elements</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--green)">${s.match}</div><div class="lbl">\u2705 Match</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--yellow)">${s.wrong}</div><div class="lbl">\u26A0\uFE0F Wrong</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--red)">${s.missing}</div><div class="lbl">\u274C Missing</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--blue)">${s.hardcoded}</div><div class="lbl">\uD83D\uDD27 Hardcoded</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--accent-light)">${s.pct}%</div><div class="lbl">Match Rate</div></div>
+  `;
+}
+
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = DATA.tabs.map(t =>
+    `<div class="tab ${t.id===activeTab?'active':''}" onclick="switchTab('${t.id}')">${t.icon} ${t.name}</div>`
+  ).join('');
+}
+
+function switchTab(id) {
+  activeTab = id;
+  renderTabs();
+  renderContent();
+}
+
+function filterStatus(s) {
+  activeFilter = s;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderContent();
+}
+
+function filterSearch(q) {
+  searchQuery = q.toLowerCase();
+  renderContent();
+}
+
+function renderContent() {
+  const tab = DATA.tabs.find(t => t.id === activeTab);
+  if (!tab) return;
+
+  let html = '';
+  tab.sections.forEach((sec, si) => {
+    const filteredRows = sec.rows.filter(r => {
+      if (r.cat) return true;
+      if (activeFilter !== "all" && r.status !== activeFilter) return false;
+      if (searchQuery && !(r.el||'').toLowerCase().includes(searchQuery) && !(r.figma||'').toLowerCase().includes(searchQuery) && !(r.ios||'').toLowerCase().includes(searchQuery)) return false;
+      return true;
+    });
+
+    // Remove trailing category headers with no data rows after them
+    const cleanRows = [];
+    for (let i=0; i<filteredRows.length; i++) {
+      if (filteredRows[i].cat) {
+        // Check if there's at least one data row after this cat
+        let hasData = false;
+        for (let j=i+1; j<filteredRows.length; j++) {
+          if (filteredRows[j].cat) break;
+          hasData = true;
+          break;
+        }
+        if (hasData) cleanRows.push(filteredRows[i]);
+      } else {
+        cleanRows.push(filteredRows[i]);
+      }
+    }
+
+    if (cleanRows.filter(r=>!r.cat).length === 0) return;
+
+    const secMatch = cleanRows.filter(r=>!r.cat && r.status==="match").length;
+    const secTotal = cleanRows.filter(r=>!r.cat).length;
+    const secPct = secTotal ? Math.round(secMatch/secTotal*100) : 0;
+
+    html += `<div class="section visible">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-title">${sec.screen} <span style="font-size:13px;color:var(--text2);font-weight:400">(${secMatch}/${secTotal})</span></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:120px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:${secPct}%;height:100%;background:linear-gradient(90deg,var(--accent-light),var(--accent));border-radius:3px"></div></div>
+          <span style="font-size:14px;font-weight:600;min-width:40px;text-align:right">${secPct}%</span>
+          <span class="chevron">\u203A</span>
+        </div>
+      </div>
+      <div class="section-body">
+        <table class="audit-table">
+          <tr><th>St</th><th>Element</th><th>Figma</th><th>iOS</th><th>Status</th><th>Note</th></tr>
+          ${cleanRows.map(r => {
+            if (r.cat) return `<tr><td class="cat-row" colspan="6">${r.cat}</td></tr>`;
+            return `<tr>
+              <td>${statusIcon(r.status)}</td>
+              <td class="el">${r.el}</td>
+              <td class="figma">${r.figma||'—'}</td>
+              <td class="ios">${r.ios||'—'}</td>
+              <td>${statusBadge(r.status)}</td>
+              <td class="note">${r.note||''}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function toggleSection(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+// Init
+renderDashboard();
+renderTabs();
+renderContent();
+</script>
+</body>
+</html>
