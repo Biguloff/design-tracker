@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Figma → iOS Design Tracker</title>
+<style>
+:root {
+  --bg: #08090B;
+  --bg2: #0C0D0F;
+  --bg3: #141517;
+  --accent: #7D4FFF;
+  --accent-light: #B298FF;
+  --green: #34C759;
+  --yellow: #FFB800;
+  --red: #FF3B30;
+  --text: #FFFFFF;
+  --text2: #8D93A1;
+  --border: #29292E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif; line-height:1.5; }
+a { color:var(--accent-light); text-decoration:none; }
+.container { max-width:1200px; margin:0 auto; padding:24px 16px; }
+
+/* Header */
+.header { text-align:center; padding:40px 0 32px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+.header h1 { font-size:32px; font-weight:700; background:linear-gradient(81.16deg, #FFF 37.23%, rgba(255,255,255,0.5) 81.25%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:8px; }
+.updated { color:var(--text2); font-size:12px; margin-top:4px; }
+
+/* Dashboard */
+.dashboard { display:flex; gap:24px; flex-wrap:wrap; justify-content:center; margin-bottom:40px; }
+.ring-card { background:var(--bg2); border-radius:16px; padding:24px; text-align:center; min-width:140px; border:1px solid var(--border); }
+.ring { width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:20px; font-weight:700; position:relative; }
+.ring::before { content:''; position:absolute; inset:0; border-radius:50%; }
+.ring-label { font-size:13px; color:var(--text2); }
+
+/* Filters */
+.filters { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+.filter-btn { background:var(--bg2); border:1px solid var(--border); color:var(--text2); padding:6px 14px; border-radius:50px; cursor:pointer; font-size:13px; transition:all 0.2s; }
+.filter-btn:hover, .filter-btn.active { background:var(--accent); color:white; border-color:var(--accent); }
+
+/* Screen sections */
+.screen { background:var(--bg2); border-radius:20px; margin-bottom:24px; border:1px solid var(--border); overflow:hidden; }
+.screen-header { padding:20px 24px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.screen-header:hover { background:var(--bg3); }
+.screen-title { font-size:18px; font-weight:600; display:flex; align-items:center; gap:12px; }
+.screen-icon { font-size:24px; }
+.screen-progress { display:flex; align-items:center; gap:12px; }
+.progress-bar { width:200px; height:8px; background:var(--bg); border-radius:4px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg, var(--accent-light), var(--accent)); border-radius:4px; transition:width 0.5s ease; }
+.progress-text { font-size:14px; font-weight:600; min-width:45px; text-align:right; }
+
+/* Element list */
+.elements { padding:0 24px 20px; display:none; }
+.elements.open { display:block; }
+.element { display:grid; grid-template-columns:32px 1fr 180px 180px 100px; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px; }
+.element:last-child { border-bottom:none; }
+.el-status { font-size:18px; text-align:center; }
+.el-name { font-weight:500; }
+.el-figma { color:var(--accent-light); font-family:'SF Mono',monospace; font-size:12px; }
+.el-ios { color:var(--text2); font-family:'SF Mono',monospace; font-size:12px; }
+.el-badge { padding:3px 10px; border-radius:50px; font-size:11px; font-weight:600; text-align:center; }
+.badge-done { background:rgba(52,199,89,0.15); color:var(--green); }
+.badge-wrong { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.badge-missing { background:rgba(255,59,48,0.15); color:var(--red); }
+.badge-progress { background:rgba(125,79,255,0.15); color:var(--accent-light); }
+
+/* Category headers in elements */
+.el-category { grid-column:1/-1; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); padding:12px 0 4px; border-bottom:1px solid var(--border); }
+
+/* Responsive */
+@media (max-width:768px) {
+  .element { grid-template-columns:28px 1fr 1fr; font-size:12px; }
+  .el-figma, .el-ios { display:none; }
+  .progress-bar { width:100px; }
+  .dashboard { gap:12px; }
+  .ring-card { min-width:100px; padding:16px; }
+}
+
+/* Chevron */
+.chevron { transition:transform 0.3s; font-size:20px; color:var(--text2); }
+.screen-header.open .chevron { transform:rotate(90deg); }
+
+/* Stats bar */
+.stats-bar { display:flex; gap:24px; justify-content:center; margin-bottom:32px; flex-wrap:wrap; }
+.stat { text-align:center; }
+.stat-num { font-size:28px; font-weight:700; }
+.stat-label { font-size:12px; color:var(--text2); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>QR Me — Figma → iOS Design Tracker</h1>
+  <p>Pixel-perfect alignment progress: every element, every screen</p>
+  <div class="updated">Last updated: <span id="lastUpdated">2026-03-29</span></div>
+</div>
+
+<!-- Dashboard Rings -->
+<div class="dashboard" id="dashboard"></div>
+
+<!-- Stats -->
+<div class="stats-bar" id="statsBar"></div>
+
+<!-- Filters -->
+<div class="filters">
+  <button class="filter-btn active" onclick="filterElements('all')">All</button>
+  <button class="filter-btn" onclick="filterElements('done')">✅ Done</button>
+  <button class="filter-btn" onclick="filterElements('wrong')">⚠️ Wrong Value</button>
+  <button class="filter-btn" onclick="filterElements('missing')">❌ Missing</button>
+  <button class="filter-btn" onclick="filterElements('progress')">⏳ In Progress</button>
+</div>
+
+<!-- Screens -->
+<div id="screens"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA — This is the single source of truth.
+// Update status here after each fix, then commit+push.
+// Statuses: "done" | "wrong" | "missing" | "progress"
+// ═══════════════════════════════════════════════════
+
+const DATA = {
+  screens: [
+    {
+      id: "profile",
+      name: "Profile",
+      icon: "👤",
+      elements: [
+        // --- COLORS ---
+        { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "0x08090B / 0xDEE3EE", status: "done" },
+        { cat: "Colors", name: "bg/secondary (stories card)", figma: "#0C0D0F / #E7EDF7", ios: "storiesCardBackground", status: "done" },
+        { cat: "Colors", name: "bg/profile-card", figma: "#0C0D0F / #DFE3EE", ios: "profileCardBackground", status: "done" },
+        { cat: "Colors", name: "badge bg", figma: "#141517 / #DFE3EE", ios: "fieldBackground", status: "done" },
+        { cat: "Colors", name: "badge border", figma: "white", ios: "white", status: "done" },
+        { cat: "Colors", name: "badge shadow (dark)", figma: "0,8,13 rgba(0,0,0,0.5)", ios: "hardcoded 0xB5BECD", status: "wrong" },
+        { cat: "Colors", name: "badge shadow (light)", figma: "0,8,13 #B5BECD", ios: "not applied", status: "missing" },
+        { cat: "Colors", name: "username color (dark)", figma: "#8D93A1 @80%", ios: "textDisabled", status: "done" },
+        { cat: "Colors", name: "username color (light)", figma: "#333740 @60%", ios: "textDisabled", status: "done" },
+        { cat: "Colors", name: "stats labels opacity", figma: "60%", ios: "needs verify", status: "progress" },
+        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        // --- TYPOGRAPHY ---
+        { cat: "Typography", name: "name font", figma: "Manrope SemiBold 32px", ios: "headingName 32pt", status: "done" },
+        { cat: "Typography", name: "name tracking", figma: "-1.28px", ios: "not set", status: "missing" },
+        { cat: "Typography", name: "username font", figma: "Manrope Medium 12px", ios: "caption 12pt", status: "wrong" },
+        { cat: "Typography", name: "stats number font", figma: "Manrope Medium 20px", ios: "no token (statsNumber)", status: "missing" },
+        { cat: "Typography", name: "stats label font", figma: "Manrope Medium 12px", ios: "no token (statsLabel)", status: "missing" },
+        { cat: "Typography", name: "bio font", figma: "Manrope Medium 12px", ios: "caption", status: "done" },
+        { cat: "Typography", name: "badge font", figma: "Manrope SemiBold 14px -0.56", ios: "hardcoded", status: "wrong" },
+        // --- LAYOUT ---
+        { cat: "Layout", name: "avatar size", figma: "154×154", ios: "profileHeader.avatarSize 154", status: "done" },
+        { cat: "Layout", name: "avatar shape", figma: "hexagon", ios: "avatarShape .hexagon", status: "done" },
+        { cat: "Layout", name: "stats gap", figma: "23px", ios: "statsSpacing 23", status: "done" },
+        { cat: "Layout", name: "stories corner radius", figma: "24px", ios: "cornerRadii.stories 24", status: "done" },
+        { cat: "Layout", name: "stories height", figma: "130px", ios: "needs verify", status: "progress" },
+        { cat: "Layout", name: "story circles size", figma: "64px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "story circles gap", figma: "20px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "photo grid gap", figma: "10.84px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "photo grid cell radius", figma: "8px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "photo grid cell size", figma: "~111.4×111.4", ios: "calculated", status: "done" },
+        { cat: "Layout", name: "screen padding horizontal", figma: "12px", ios: "no token", status: "missing" },
+        // --- EFFECTS ---
+        { cat: "Effects", name: "name gradient text", figma: "linear-gradient 81.16deg", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "purple glow around avatar", figma: "blur 45, #7D4FFF @0.9", ios: "in ThemeEffects, not applied", status: "missing" },
+        { cat: "Effects", name: "decorative glow ellipses", figma: "radial gradient purple", ios: "ThemeBackgroundView", status: "done" },
+      ]
+    },
+    {
+      id: "feed",
+      name: "Feed",
+      icon: "📰",
+      elements: [
+        { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
+        { cat: "Colors", name: "stories card bg", figma: "#0C0D0F / #E7EDF7", ios: "storiesCardBackground", status: "done" },
+        { cat: "Colors", name: "stories card border", figma: "#DEDEFF", ios: "hardcoded", status: "wrong" },
+        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "type-check hardcoded", status: "wrong" },
+        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "secondBackground", status: "done" },
+        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "hardcoded white", status: "wrong" },
+        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        { cat: "Colors", name: "header icons opacity", figma: "50%", ios: "needs verify", status: "progress" },
+        { cat: "Typography", name: "title gradient", figma: "Manrope SemiBold 24px gradient", ios: "not implemented", status: "missing" },
+        { cat: "Typography", name: "title tracking", figma: "-0.96px", ios: "not set", status: "missing" },
+        { cat: "Typography", name: "recommendation label", figma: "14px Medium uppercase", ios: "no token (sectionLabel)", status: "missing" },
+        { cat: "Typography", name: "event stats text", figma: "12px Regular #8D93A1", ios: "hardcoded 0x8D93A1", status: "wrong" },
+        { cat: "Layout", name: "stories section height", figma: "130px", ios: "needs verify", status: "progress" },
+        { cat: "Layout", name: "event card radius", figma: "32px", ios: "no token (eventCard)", status: "missing" },
+        { cat: "Layout", name: "header icons gap", figma: "16px", ios: "needs verify", status: "progress" },
+        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "tab bar blur", figma: "backdrop-blur 7px", ios: "implemented", status: "done" },
+      ]
+    },
+    {
+      id: "messages",
+      name: "Messages",
+      icon: "💬",
+      elements: [
+        { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
+        { cat: "Colors", name: "chat name color", figma: "white / black", ios: ".text", status: "done" },
+        { cat: "Colors", name: "message preview", figma: "#8D93A1 @70%", ios: "messageColor @70%", status: "done" },
+        { cat: "Colors", name: "date text (dark)", figma: "rgba(141,147,161,0.5)", ios: "messageDateColor @50%", status: "done" },
+        { cat: "Colors", name: "swipe more bg (dark)", figma: "#1B1B1B", ios: "hardcoded 0x1B1B1B", status: "wrong" },
+        { cat: "Colors", name: "swipe more bg (light)", figma: "#C3C9D8", ios: "hardcoded 0xC3C9D8", status: "wrong" },
+        { cat: "Colors", name: "swipe archive bg", figma: "#B398FF", ios: "archiveButtonBg 0xB298FF", status: "wrong" },
+        { cat: "Colors", name: "separator", figma: "tabBarBorder", ios: "tabBarBorderColor", status: "done" },
+        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "not implemented", status: "missing" },
+        { cat: "Typography", name: "chat name", figma: "Manrope Medium 16px", ios: "messageName 16pt", status: "done" },
+        { cat: "Typography", name: "preview text", figma: "Manrope Regular 12px", ios: "no token (messagePreview)", status: "missing" },
+        { cat: "Typography", name: "date text", figma: "Manrope Regular 14px", ios: "no token (messageDate)", status: "missing" },
+        { cat: "Layout", name: "avatar size", figma: "52px", ios: "no token (avatarMessage)", status: "missing" },
+        { cat: "Layout", name: "row height", figma: "85px", ios: "needs verify", status: "progress" },
+        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "not implemented", status: "missing" },
+        // --- BUGS ---
+        { cat: "Bugs", name: "swipe 'More' handler empty", figma: "should show actions", ios: "empty TODO stub", status: "missing" },
+        { cat: "Bugs", name: "swipe 'Archive' deletes chat", figma: "should archive", ios: "calls deleteChat()", status: "missing" },
+      ]
+    },
+    {
+      id: "chat",
+      name: "Chat",
+      icon: "🗨️",
+      elements: [
+        { cat: "Colors", name: "bg/primary", figma: "#000000 / #DEE3EE", ios: "theme.colors.background", status: "done" },
+        { cat: "Colors", name: "sent bubble bg", figma: "#D0C0FF / #D4D7EF", ios: "sentMessage", status: "done" },
+        { cat: "Colors", name: "received bubble bg", figma: "#1D1D1D / #EFF1F3", ios: "receivedMessage", status: "done" },
+        { cat: "Colors", name: "input bg (dark)", figma: "#0C0D0F", ios: "0x1D1D1D", status: "wrong" },
+        { cat: "Colors", name: "input bg (light)", figma: "#CED4DF", ios: "0xEFF2F9", status: "wrong" },
+        { cat: "Colors", name: "input border", figma: "#DEDEFF", ios: "tabBarBorderColor", status: "wrong" },
+        { cat: "Colors", name: "date separator bg (dark)", figma: "#1D1D1D", ios: "needs token", status: "missing" },
+        { cat: "Colors", name: "date separator text", figma: "#8D93A1", ios: "textDisabled", status: "done" },
+        { cat: "Typography", name: "message text", figma: "Manrope Medium 16px", ios: "chatBody 16pt", status: "done" },
+        { cat: "Typography", name: "time label", figma: "11px @30% opacity", ios: "chatTime 11pt", status: "done" },
+        { cat: "Typography", name: "date separator", figma: "Manrope Medium 12px", ios: "caption", status: "done" },
+        { cat: "Typography", name: "contact name", figma: "Manrope Medium 16px", ios: "messageName", status: "done" },
+        { cat: "Layout", name: "input corner radius", figma: "24px", ios: "chatInput 24", status: "done" },
+        { cat: "Layout", name: "sent bubble corners", figma: "16/16/16/4", ios: "chatBubbleSentCorners", status: "done" },
+        { cat: "Layout", name: "received bubble corners", figma: "16/16/4/16", ios: "chatBubbleReceivedCorners", status: "done" },
+        { cat: "Layout", name: "input field size", figma: "279×32px", ios: "needs verify", status: "progress" },
+        { cat: "Effects", name: "header backdrop blur", figma: "blur 7px", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "input bar blur", figma: "blur 7px", ios: "tabBarBlurStyle", status: "done" },
+        // --- BUGS ---
+        { cat: "Bugs", name: "media = empty bubbles", figma: "show image/video", ios: ".image/.video not handled", status: "missing" },
+        { cat: "Bugs", name: "two context menus on long press", figma: "one menu", ios: "system + custom overlap", status: "missing" },
+      ]
+    },
+    {
+      id: "events",
+      name: "Events",
+      icon: "🎉",
+      elements: [
+        { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
+        { cat: "Colors", name: "event card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "type-check + hardcoded", status: "wrong" },
+        { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "secondBackground", status: "done" },
+        { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "hardcoded", status: "wrong" },
+        { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "hardcoded 0xDEDEFF", status: "wrong" },
+        { cat: "Colors", name: "stats text color", figma: "#8D93A1", ios: "hardcoded 0x8D93A1 ×4", status: "wrong" },
+        { cat: "Colors", name: "'Интересует' gradient", figma: "A98AFF→7D50FF", ios: "applyThemeGradient()", status: "done" },
+        { cat: "Colors", name: "'Пойду' text opacity", figma: "70%", ios: "needs verify", status: "progress" },
+        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "not implemented", status: "missing" },
+        { cat: "Typography", name: "event title font", figma: "Manrope Regular 15px", ios: "no token (eventTitle)", status: "missing" },
+        { cat: "Typography", name: "event button font", figma: "SemiBold 14px -0.28", ios: "manropeSemibold 14", status: "done" },
+        { cat: "Typography", name: "event stats font", figma: "Regular 12px", ios: "manrope 12", status: "done" },
+        { cat: "Layout", name: "event card radius", figma: "32px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "'Интересует' radius", figma: "48px (pill)", ios: "buttonCornerRadius (verify)", status: "progress" },
+        { cat: "Layout", name: "'Интересует' size", figma: "155×42px", ios: "needs verify", status: "progress" },
+        // --- BUGS ---
+        { cat: "Bugs", name: "star icon too large", figma: "~14-16px", ios: "~50% button height", status: "missing" },
+        { cat: "Bugs", name: "star invisible in dark", figma: "white on gradient", ios: "no tintColor", status: "missing" },
+        { cat: "Bugs", name: "white bar on event detail (light)", figma: "no bar", ios: "~44px white strip", status: "missing" },
+      ]
+    },
+    {
+      id: "qr",
+      name: "QR",
+      icon: "📷",
+      elements: [
+        { cat: "Colors", name: "bg/primary", figma: "#08090B / #DEE3EE", ios: "theme.colors.background", status: "done" },
+        { cat: "Colors", name: "QR card bg (dark)", figma: "rgba(255,255,255,0.05)", ios: "secondBackground", status: "wrong" },
+        { cat: "Colors", name: "QR card bg (light)", figma: "rgba(0,0,0,0.05)", ios: "secondBackground", status: "wrong" },
+        { cat: "Colors", name: "tab switcher bg (dark)", figma: "#131416", ios: "needs verify", status: "progress" },
+        { cat: "Colors", name: "@ symbol color", figma: "#B398FF", ios: "needs verify", status: "progress" },
+        { cat: "Colors", name: "active tab gradient", figma: "A98AFF→7D50FF", ios: "needs verify", status: "progress" },
+        { cat: "Typography", name: "button text", figma: "Manrope Medium 16px", ios: "needs verify", status: "progress" },
+        { cat: "Typography", name: "user ID text", figma: "Manrope Medium 16px", ios: "needs verify", status: "progress" },
+        { cat: "Layout", name: "QR card radius", figma: "32px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "QR card size", figma: "341×341", ios: "needs verify", status: "progress" },
+        { cat: "Layout", name: "order button height", figma: "58px, radius 24px", ios: "needs verify", status: "progress" },
+        { cat: "Layout", name: "segmented control radius", figma: "48px", ios: "needs verify", status: "progress" },
+      ]
+    },
+    {
+      id: "tabbar",
+      name: "Tab Bar",
+      icon: "🔽",
+      elements: [
+        { cat: "Colors", name: "bg color", figma: "#272729", ios: "tabBarBackground", status: "done" },
+        { cat: "Colors", name: "selected icon (dark)", figma: "white", ios: "tabBarSelectedColor", status: "done" },
+        { cat: "Colors", name: "selected icon (light)", figma: "#0E0E0E", ios: "tabBarSelectedColor", status: "done" },
+        { cat: "Colors", name: "unselected icon", figma: "#8D93A1 / #888888", ios: "tabBarUnselected", status: "done" },
+        { cat: "Colors", name: "border", figma: "#29292E / #CDD1DB", ios: "tabBarBorder", status: "done" },
+        { cat: "Typography", name: "tab labels hidden", figma: "no text labels", ios: "items.title = nil", status: "done" },
+        { cat: "Layout", name: "height", figma: "76px (new) / 72px (default)", ios: "tabBar.height", status: "done" },
+        { cat: "Layout", name: "center button", figma: "65×65", ios: "middleButtonSize", status: "done" },
+        { cat: "Layout", name: "icon size", figma: "20px", ios: "no token", status: "missing" },
+        { cat: "Layout", name: "top corner radius", figma: "16px", ios: "no token (tabbarTop)", status: "missing" },
+        { cat: "Effects", name: "blur (dark)", figma: "dark blur", ios: "tabBarBlurStyle .dark", status: "done" },
+        { cat: "Effects", name: "blur (light)", figma: "light blur", ios: "tabBarBlurStyle .light", status: "done" },
+        { cat: "Effects", name: "gradient overlay", figma: "bg→transparent", ios: "gradientLayer", status: "done" },
+      ]
+    },
+    {
+      id: "tokens",
+      name: "Token System",
+      icon: "🎨",
+      elements: [
+        { cat: "Colors (missing)", name: "bg/event-card token", figma: "#0C0D0F / #E7EDF7", ios: "not in ThemeColors", status: "missing" },
+        { cat: "Colors (missing)", name: "bg/swipe-more token", figma: "#1B1B1B / #C3C9D8", ios: "not in ThemeColors", status: "missing" },
+        { cat: "Colors (missing)", name: "heading gradient start/end", figma: "per-theme", ios: "not in ThemeColors", status: "missing" },
+        { cat: "Colors (missing)", name: "inline/separator", figma: "#D9D9D9", ios: "not in ThemeColors", status: "missing" },
+        { cat: "Colors (missing)", name: "stories card border", figma: "#DEDEFF", ios: "not in ThemeColors", status: "missing" },
+        { cat: "Colors (wrong)", name: "chat/input-bg dark", figma: "#0C0D0F", ios: "0x1D1D1D", status: "wrong" },
+        { cat: "Colors (wrong)", name: "chat/input-bg light", figma: "#CED4DF", ios: "0xEFF2F9", status: "wrong" },
+        { cat: "Colors (wrong)", name: "text/message-date dark", figma: "#4A4F5A", ios: "0x8D93A1", status: "wrong" },
+        { cat: "Colors (wrong)", name: "bg/swipe-archive", figma: "#B398FF", ios: "0xB298FF", status: "wrong" },
+        { cat: "Fonts (missing)", name: "bodyMedium", figma: "14px Medium", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "captionMedium", figma: "12px Medium", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "messagePreview", figma: "12px Regular", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "messageDate", figma: "14px Regular", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "statsNumber", figma: "20px Regular", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "statsLabel", figma: "12px Regular", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "eventTitle", figma: "15px Regular", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "eventButton", figma: "14px SemiBold", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Fonts (missing)", name: "sectionLabel", figma: "14px Medium upper", ios: "not in ThemeFonts", status: "missing" },
+        { cat: "Layout (missing)", name: "cornerRadii.eventCard", figma: "32", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "cornerRadii.photoGrid", figma: "8", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "cornerRadii.tabbarTop", figma: "16", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "sizes.avatarMessage", figma: "52", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "sizes.avatarStories", figma: "64", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "sizes.tabbarIcon", figma: "20", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "gaps.storiesItem", figma: "20", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "gaps.photoGrid", figma: "10.84", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "padding.screenHorizontal", figma: "12", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Layout (missing)", name: "padding.cardHorizontal", figma: "24", ios: "not in ThemeLayout", status: "missing" },
+        { cat: "Effects", name: "headingGradientEnabled flag", figma: "gradient on New themes", ios: "not in ThemeEffects", status: "missing" },
+      ]
+    },
+    {
+      id: "crashes",
+      name: "Crash Fixes",
+      icon: "💥",
+      elements: [
+        { cat: "Critical", name: "Array bounds — StoryPrepareVC", figma: "safe access", ios: "no bounds check ×7", status: "missing" },
+        { cat: "Critical", name: "Force cast — cellForItemAt", figma: "safe cast", ios: "as! in 10+ places", status: "missing" },
+        { cat: "Critical", name: "Empty list crash — MessengerVC:316", figma: "guard empty", ios: "index -1 possible", status: "missing" },
+        { cat: "High", name: "Lifecycle bug — ChatsVC:96", figma: "viewWillDisappear", ios: "calls viewDidDisappear", status: "missing" },
+        { cat: "High", name: "Cyrillic var name — MediaMessageCell", figma: "cellDelegate", ios: "сellDelegate (Cyrillic с)", status: "missing" },
+      ]
+    }
+  ]
+};
+
+// ═══════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════
+
+function getStatusIcon(s) {
+  return { done:"✅", wrong:"⚠️", missing:"❌", progress:"⏳" }[s] || "❓";
+}
+function getStatusBadge(s) {
+  const labels = { done:"Done", wrong:"Wrong", missing:"Missing", progress:"In Progress" };
+  return `<span class="el-badge badge-${s}">${labels[s]||s}</span>`;
+}
+
+function calcStats() {
+  let total=0, done=0, wrong=0, missing=0, progress=0;
+  const perScreen = {};
+  DATA.screens.forEach(scr => {
+    let sd=0, st=0;
+    scr.elements.forEach(el => {
+      total++; st++;
+      if(el.status==="done"){done++;sd++;}
+      else if(el.status==="wrong"){wrong++;}
+      else if(el.status==="missing"){missing++;}
+      else{progress++;}
+    });
+    perScreen[scr.id] = { done:sd, total:st, pct: st?Math.round(sd/st*100):0 };
+  });
+  return { total, done, wrong, missing, progress, perScreen, pct: total?Math.round(done/total*100):0 };
+}
+
+function renderDashboard(stats) {
+  const cats = [
+    { label:"Overall", pct:stats.pct, color:"var(--accent)" },
+  ];
+  // Per-category
+  const catMap = {};
+  DATA.screens.forEach(scr => scr.elements.forEach(el => {
+    const c = el.cat.split(" ")[0];
+    if(!catMap[c]) catMap[c]={done:0,total:0};
+    catMap[c].total++;
+    if(el.status==="done") catMap[c].done++;
+  }));
+  ["Colors","Typography","Layout","Effects","Bugs","Critical"].forEach(c => {
+    if(catMap[c]) cats.push({ label:c, pct:Math.round(catMap[c].done/catMap[c].total*100), color: catMap[c].done===catMap[c].total?"var(--green)":catMap[c].done/catMap[c].total>0.6?"var(--yellow)":"var(--red)" });
+  });
+
+  document.getElementById("dashboard").innerHTML = cats.map(c => `
+    <div class="ring-card">
+      <div class="ring" style="border:4px solid ${c.color}">${c.pct}%</div>
+      <div class="ring-label">${c.label}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("statsBar").innerHTML = `
+    <div class="stat"><div class="stat-num">${stats.total}</div><div class="stat-label">Total Elements</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--green)">${stats.done}</div><div class="stat-label">✅ Done</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--yellow)">${stats.wrong}</div><div class="stat-label">⚠️ Wrong</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--red)">${stats.missing}</div><div class="stat-label">❌ Missing</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--accent-light)">${stats.progress}</div><div class="stat-label">⏳ In Progress</div></div>
+  `;
+}
+
+function renderScreens(stats) {
+  document.getElementById("screens").innerHTML = DATA.screens.map(scr => {
+    const s = stats.perScreen[scr.id];
+    let lastCat = "";
+    const rows = scr.elements.map(el => {
+      let catRow = "";
+      if(el.cat !== lastCat) {
+        catRow = `<div class="el-category">${el.cat}</div>`;
+        lastCat = el.cat;
+      }
+      return catRow + `
+        <div class="element" data-status="${el.status}">
+          <div class="el-status">${getStatusIcon(el.status)}</div>
+          <div class="el-name">${el.name}</div>
+          <div class="el-figma">${el.figma}</div>
+          <div class="el-ios">${el.ios}</div>
+          ${getStatusBadge(el.status)}
+        </div>`;
+    }).join("");
+
+    return `
+      <div class="screen" id="screen-${scr.id}">
+        <div class="screen-header" onclick="toggleScreen('${scr.id}')">
+          <div class="screen-title">
+            <span class="screen-icon">${scr.icon}</span>
+            ${scr.name}
+          </div>
+          <div class="screen-progress">
+            <div class="progress-bar"><div class="progress-fill" style="width:${s.pct}%"></div></div>
+            <div class="progress-text">${s.done}/${s.total}</div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+        <div class="elements" id="els-${scr.id}">${rows}</div>
+      </div>`;
+  }).join("");
+}
+
+function toggleScreen(id) {
+  const els = document.getElementById("els-"+id);
+  const hdr = els.previousElementSibling;
+  els.classList.toggle("open");
+  hdr.classList.toggle("open");
+}
+
+function filterElements(status) {
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  document.querySelectorAll(".element").forEach(el => {
+    if(status==="all") el.style.display="";
+    else el.style.display = el.dataset.status===status ? "" : "none";
+  });
+}
+
+// Init
+const stats = calcStats();
+renderDashboard(stats);
+renderScreens(stats);
+</script>
+</body>
+</html>
