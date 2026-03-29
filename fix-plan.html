@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Quality Fix Plan: pixel-perfect-tokens</title>
+<style>
+:root{--bg:#08090B;--bg2:#0C0D0F;--bg3:#141517;--accent:#7D4FFF;--accent-light:#B298FF;--green:#34C759;--yellow:#FFB800;--red:#FF3B30;--orange:#FF9500;--teal:#30B0C7;--text:#FFF;--text2:#8D93A1;--border:#29292E}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,-apple-system,sans-serif;line-height:1.6}
+a{color:var(--accent-light);text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px}
+.back-link{display:inline-block;margin-bottom:16px;font-size:13px}
+.header{text-align:center;padding:40px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.header h1{font-size:28px;font-weight:700;background:linear-gradient(81.16deg,#FFF 37.23%,rgba(255,255,255,0.5) 81.25%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text2);margin-top:8px;font-size:14px}
+.meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--text2)}
+.meta span{background:var(--bg3);padding:4px 12px;border-radius:50px;border:1px solid var(--border)}
+
+.summary{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;min-width:120px}
+.sum-num{font-size:28px;font-weight:700}.sum-label{font-size:12px;color:var(--text2)}
+
+.section{background:var(--bg2);border-radius:20px;margin-bottom:16px;border:1px solid var(--border);overflow:hidden}
+.section-header{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.section-header:hover{background:var(--bg3)}
+.section-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
+.chevron{transition:transform .3s;font-size:18px;color:var(--text2)}
+.section-header.open .chevron{transform:rotate(90deg)}
+.section-body{padding:0 24px 20px;display:none}.section-body.open{display:block}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:600}
+.b-p0{background:rgba(255,59,48,0.15);color:var(--red)}.b-p1{background:rgba(255,149,0,0.15);color:var(--orange)}.b-p2{background:rgba(255,184,0,0.15);color:var(--yellow)}
+.b-done{background:rgba(52,199,89,0.12);color:var(--green)}
+
+.fix{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin:10px 0}
+.fix h4{font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.fix p,.fix ul{font-size:13px;color:var(--text2);line-height:1.7}.fix ul{padding-left:18px}.fix li{margin:3px 0}
+.fix code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;font-family:'SF Mono',monospace;color:var(--accent-light)}
+.code{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'SF Mono',monospace;font-size:11px;line-height:1.6;overflow-x:auto;margin:8px 0;white-space:pre;color:var(--text2)}
+
+.file-ref{font-family:'SF Mono',monospace;font-size:11px;color:var(--teal);background:rgba(48,176,199,0.1);padding:2px 8px;border-radius:4px;display:inline-block;margin:2px 0}
+
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+tr:last-child td{border-bottom:none}
+
+.figma-ref{display:inline-block;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:rgba(125,79,255,0.15);color:var(--accent-light)}
+
+.progress-section{margin-bottom:32px}
+.progress-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.progress-label{font-size:13px;min-width:200px}
+.progress-bar{flex:1;height:10px;background:var(--bg3);border-radius:5px;overflow:hidden}
+.progress-fill{height:100%;border-radius:5px;transition:width .8s ease}
+.progress-val{font-size:13px;font-weight:600;min-width:40px;text-align:right}
+
+@media(max-width:768px){.fix code{font-size:10px}.file-ref{font-size:10px}table{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="index.html">&larr; Design Tracker</a>
+
+<div class="header">
+  <h1>Quality Fix Plan</h1>
+  <p>8 задач для закрытия всех недочётов из code review</p>
+  <div class="meta">
+    <span>~5-6 часов</span>
+    <span>~15 файлов</span>
+    <span>8 задач</span>
+    <span>feature/pixel-perfect-tokens</span>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="sum-card"><div class="sum-num" style="color:var(--red)">2</div><div class="sum-label">P0 — блокеры</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--orange)">3</div><div class="sum-label">P1 — важные</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--yellow)">3</div><div class="sum-label">P2 — улучшения</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--text2)">~5ч</div><div class="sum-label">Общее время</div></div>
+</div>
+
+<!-- Current state -->
+<div class="progress-section">
+  <h3 style="font-size:15px;margin-bottom:12px">Текущее покрытие (Figma → iOS)</h3>
+  <div class="progress-row">
+    <span class="progress-label">Color-токены (50/61)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:82%;background:linear-gradient(90deg,var(--accent-light),var(--accent))"></div></div>
+    <span class="progress-val" style="color:var(--accent-light)">82%</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Font-токены (21/14)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">100%+</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Layout-токены</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:95%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">95%</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Effects-токены</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:90%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">90%</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Hardcoded в UI (11 осталось)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--green)"></div></div>
+    <span class="progress-val" style="color:var(--green)">92%</span>
+  </div>
+  <div class="progress-row">
+    <span class="progress-label">Combine-подписки (cgColor)</span>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--red)"></div></div>
+    <span class="progress-val" style="color:var(--red)">0%</span>
+  </div>
+</div>
+
+<!-- ===== TASK 1 ===== -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p0">P0</span> Task 1 — Вынести 4 hardcoded hex в токены <span style="color:var(--text2);font-size:12px;font-weight:400">15 мин</span></div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Мы сами внесли 4 hardcoded цвета в UI-код — регрессия, нарушение главного правила гайда.</p>
+
+    <div class="fix">
+      <h4>Fix 1.1</h4>
+      <div class="file-ref">MessageSectionHeaderView.swift:23</div>
+      <p><b>Сейчас:</b> <code>UIColor(hex: 0x1D1D1D)</code> — фон date separator pill</p>
+      <p><b>Figma:</b> <span class="figma-ref">chat/received = #1D1D1D</span></p>
+<div class="code">// Было:
+: UIColor(hex: 0x1D1D1D)
+// Стало:
+: .receivedMessageColor</div>
+    </div>
+
+    <div class="fix">
+      <h4>Fix 1.2</h4>
+      <div class="file-ref">MyQrViewController.swift:91</div>
+      <p><b>Сейчас:</b> <code>UIColor(hex: 0x131416)</code> — фон нижней части QR-карточки</p>
+      <p><b>Figma:</b> <span class="figma-ref">bg/field = #141517</span> (ближайший)</p>
+<div class="code">// Было:
+bottomContentView?.backgroundColor = UIColor(hex: 0x131416)
+// Стало:
+bottomContentView?.backgroundColor = UIColor { _ in ThemeTokenStorage.colors.qrCardBackground }</div>
+    </div>
+
+    <div class="fix">
+      <h4>Fix 1.3</h4>
+      <div class="file-ref">MyQrViewController.swift:93</div>
+      <p><b>Сейчас:</b> <code>UIColor(hex: 0xDEDEFF).cgColor</code></p>
+      <p><b>Figma:</b> <span class="figma-ref">border/stories-card = #DEDEFF</span></p>
+<div class="code">// Было:
+bottomContentView?.layer.borderColor = UIColor(hex: 0xDEDEFF).cgColor
+// Стало:
+bottomContentView?.layer.borderColor = UIColor.storiesCardBorder.cgColor</div>
+    </div>
+
+    <div class="fix">
+      <h4>Fix 1.4</h4>
+      <div class="file-ref">MyQrViewController.swift:162</div>
+      <p><b>Сейчас:</b> <code>UIColor(red: 0.702, green: 0.596, blue: 1.0)</code> — цвет символа @</p>
+      <p><b>Figma:</b> <span class="figma-ref">accent/light = #B298FF = rgb(178,152,255)</span></p>
+<div class="code">// Было:
+value: UIColor(red: 0.702, green: 0.596, blue: 1.0, alpha: 1.0),
+// Стало:
+value: UIColor.lightAccentColor,</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 2 ===== -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p0">P0</span> Task 2 — Combine-подписки для .cgColor <span style="color:var(--text2);font-size:12px;font-weight:400">2-3 ч</span></div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">10 <code>.cgColor</code> assignments без Combine-подписок. При runtime theme switch — бордеры и градиенты не обновятся.</p>
+
+    <table>
+      <thead><tr><th>Файл</th><th>Строки</th><th>Что не обновится</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><code>AnnounceView.swift</code></td><td>197, 199</td><td>borderColor event cards</td><td>themeCancellable → applyThemeColors()</td></tr>
+        <tr><td><code>StoriesLineView.swift</code></td><td>211</td><td>strokeColor stories border</td><td>добавить в theme subscription</td></tr>
+        <tr><td><code>AssignCodePopUpVC.swift</code></td><td>51</td><td>skipButton borderColor</td><td>themeCancellable → update border</td></tr>
+        <tr><td><code>MyQrViewController.swift</code></td><td>89, 93, 102, 127</td><td>4× borderColor + gradient</td><td>applyThemeColors() + subscription</td></tr>
+        <tr><td><code>MessengerVC.swift</code></td><td>548-549</td><td>gradient tint colors</td><td>пересоздать gradient при theme switch</td></tr>
+      </tbody>
+    </table>
+
+    <div class="fix">
+      <h4>Паттерн (из гайда Таймураза)</h4>
+<div class="code">private var themeCancellable: AnyCancellable?
+
+// В viewDidLoad / awakeFromNib / init:
+themeCancellable = ThemeManager.shared.$currentTheme
+    .receive(on: DispatchQueue.main)
+    .sink { [weak self] _ in self?.applyThemeColors() }
+
+func applyThemeColors() {
+    // Все .cgColor assignments здесь
+    layer.borderColor = UIColor.cardBorder.cgColor
+    gradientLayer.colors = [UIColor.gradientStart.cgColor, ...]
+}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 3 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p1">P1</span> Task 3 — Type checks → token-based <span style="color:var(--text2);font-size:12px;font-weight:400">30 мин</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">20 мест с <code>theme is NewDarkTheme</code>. Добавить <code>isNewDesign: Bool</code> в ThemeProtocol.</p>
+    <table>
+      <thead><tr><th>Файл</th><th>Кол-во checks</th><th>Строки</th></tr></thead>
+      <tbody>
+        <tr><td><code>AnnounceView.swift</code></td><td>4</td><td>171, 173, 174, 175, 181</td></tr>
+        <tr><td><code>ProfileViewController.swift</code></td><td>4</td><td>359, 368, 374, 396</td></tr>
+        <tr><td><code>CustomTabBarViewController.swift</code></td><td>5</td><td>70, 82, 209, 408, 414</td></tr>
+        <tr><td><code>MyQrViewController.swift</code></td><td>3</td><td>86, 90, 106</td></tr>
+        <tr><td><code>NewProfileHeaderView.swift</code></td><td>1</td><td>313</td></tr>
+        <tr><td><code>ThemeBackgroundView.swift</code></td><td>1</td><td>78</td></tr>
+      </tbody>
+    </table>
+    <div class="fix">
+      <h4>Fix</h4>
+<div class="code">// ThemeProtocol.swift:
+var isNewDesign: Bool { get }
+
+// NewDarkTheme / NewLightTheme:
+var isNewDesign: Bool { true }
+
+// DefaultTheme:
+var isNewDesign: Bool { false }
+
+// Everywhere else:
+let isNewTheme = theme.isNewDesign  // instead of: theme is NewDarkTheme || ...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 4 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p1">P1</span> Task 4 — Magic tags → именованные константы <span style="color:var(--text2);font-size:12px;font-weight:400">10 мин</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Tag</th><th>Файл</th><th>Назначение</th><th>Константа</th></tr></thead>
+      <tbody>
+        <tr><td><code>7701</code></td><td>AnnounceView.swift</td><td>Glass blur view на event card</td><td><code>ViewTag.glassBlur</code></td></tr>
+        <tr><td><code>8004</code></td><td>MessengerVC.swift</td><td>Blur за input panel</td><td><code>ViewTag.inputPanelBlur</code></td></tr>
+        <tr><td><code>8005</code></td><td>MessengerVC.swift</td><td>Gradient tint overlay</td><td><code>ViewTag.inputGradientTint</code></td></tr>
+      </tbody>
+    </table>
+    <div class="fix">
+      <h4>Паттерн</h4>
+<div class="code">private enum ViewTag {
+    static let glassBlur = 7701
+    static let inputPanelBlur = 8004
+    static let inputGradientTint = 8005
+}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 5 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p1">P1</span> Task 5 — Добавить 6 недостающих Figma-токенов <span style="color:var(--text2);font-size:12px;font-weight:400">20 мин</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Figma определяет 61 токен, у нас 50. Маппинг на 82% — нужно добрать 6 токенов.</p>
+    <table>
+      <thead><tr><th>Figma-токен</th><th>Свойство</th><th>dark</th><th>light</th><th>default</th></tr></thead>
+      <tbody>
+        <tr><td><span class="figma-ref">text/secondary</span></td><td><code>textSecondary</code></td><td>#8D93A1</td><td>#333740</td><td>#909090</td></tr>
+        <tr><td><span class="figma-ref">text/message-preview</span></td><td><code>messagePreviewColor</code></td><td>#8D93A1</td><td>#33353A</td><td>#909090</td></tr>
+        <tr><td><span class="figma-ref">chat/received-text</span></td><td><code>receivedMessageText</code></td><td>#FFFFFF</td><td>#0E0E0E</td><td>#FFFFFF</td></tr>
+        <tr><td><span class="figma-ref">inline/event-border</span></td><td><code>eventBorderInline</code></td><td colspan="3">из Figma payload</td></tr>
+        <tr><td><span class="figma-ref">inline/profile-subtitle</span></td><td><code>profileSubtitleColor</code></td><td colspan="3">из Figma payload</td></tr>
+        <tr><td><span class="figma-ref">inline/light-message-preview</span></td><td><code>lightMessagePreview</code></td><td colspan="3">из Figma payload</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== TASK 6 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p2">P2</span> Task 6 — Reference VC implementation <span style="color:var(--text2);font-size:12px;font-weight:400">1 ч</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="fix">
+      <h4>Выбрать один VC и оформить как эталон</h4>
+      <p><b>Кандидат:</b> <code>AssignCodePopUpViewController</code> — маленький, уже использует tokens.</p>
+      <ul>
+        <li><code>Themeable</code> conformance</li>
+        <li><code>themeCancellable</code> + Combine subscription</li>
+        <li><code>applyTheme()</code> со всеми cgColor updates</li>
+        <li>Комментарии-маркеры <code>// REFERENCE: ...</code></li>
+        <li>0 magic numbers, 0 hardcoded colors, 0 type checks</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 7 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p2">P2</span> Task 7 — Адаптировать TEST_CHECKLIST <span style="color:var(--text2);font-size:12px;font-weight:400">30 мин</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="fix">
+      <h4>Взять из ветки Таймураза и расширить</h4>
+      <ul>
+        <li>Скопировать <code>QRme/Theming/TEST_CHECKLIST.md</code></li>
+        <li>Добавить: glass effects (event cards), gradient locations (кнопки), chatBubbleCorners</li>
+        <li>Адаптировать под 3 темы (NewDark, NewLight, Default) вместо 5</li>
+        <li>Добавить проверку runtime theme switching</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 8 ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-p2">P2</span> Task 8 — lazy blur → theme-reactive <span style="color:var(--text2);font-size:12px;font-weight:400">15 мин</span></div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <table>
+      <thead><tr><th>Файл</th><th>Проблема</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>QRmeDraggableTextView.swift:116</code></td>
+          <td><code>lazy var blurView</code> — blur style не обновится</td>
+          <td>Добавить <code>updateBlurStyle()</code> в theme subscription</td>
+        </tr>
+        <tr>
+          <td><code>MessageActionsMenuView.swift:88</code></td>
+          <td><code>lazy var blurView</code> — аналогично</td>
+          <td>Добавить <code>updateBlurStyle()</code> в theme subscription</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="fix">
+      <h4>Паттерн</h4>
+<div class="code">func updateBlurStyle() {
+    let style = ThemeTokenStorage.effects.tabBarBlurStyle ?? .systemUltraThinMaterialDark
+    blurView.effect = UIBlurEffect(style: style)
+}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary table -->
+<div style="margin-top:24px;padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:20px">
+  <h3 style="font-size:15px;margin-bottom:16px">Сводка по задачам</h3>
+  <table>
+    <thead><tr><th>#</th><th>Задача</th><th>P</th><th>Время</th><th>Файлов</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Hardcoded hex → tokens</td><td><span class="badge b-p0">P0</span></td><td>15 мин</td><td>2</td></tr>
+      <tr><td>2</td><td>Combine-подписки для .cgColor</td><td><span class="badge b-p0">P0</span></td><td>2-3 ч</td><td>5</td></tr>
+      <tr><td>3</td><td>Type checks → token-based</td><td><span class="badge b-p1">P1</span></td><td>30 мин</td><td>7</td></tr>
+      <tr><td>4</td><td>Magic tags → constants</td><td><span class="badge b-p1">P1</span></td><td>10 мин</td><td>2</td></tr>
+      <tr><td>5</td><td>6 недостающих Figma-токенов</td><td><span class="badge b-p1">P1</span></td><td>20 мин</td><td>5</td></tr>
+      <tr><td>6</td><td>Reference VC</td><td><span class="badge b-p2">P2</span></td><td>1 ч</td><td>1</td></tr>
+      <tr><td>7</td><td>TEST_CHECKLIST</td><td><span class="badge b-p2">P2</span></td><td>30 мин</td><td>1</td></tr>
+      <tr><td>8</td><td>lazy blur → reactive</td><td><span class="badge b-p2">P2</span></td><td>15 мин</td><td>2</td></tr>
+      <tr style="border-top:2px solid var(--border)"><td></td><td><b>Итого</b></td><td></td><td><b>~5-6 ч</b></td><td><b>~15</b></td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+<script>function toggle(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open')}</script>
+</body>
+</html>
