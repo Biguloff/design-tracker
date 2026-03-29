@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Full Design Audit: Figma vs iOS</title>
+<style>
+:root {
+  --bg: #08090B;
+  --bg2: #0C0D0F;
+  --bg3: #141517;
+  --accent: #7D4FFF;
+  --accent-light: #B298FF;
+  --green: #34C759;
+  --yellow: #FFB800;
+  --red: #FF3B30;
+  --text: #FFFFFF;
+  --text2: #8D93A1;
+  --border: #29292E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif; line-height:1.5; }
+a { color:var(--accent-light); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:1400px; margin:0 auto; padding:24px 16px; }
+
+.header { text-align:center; padding:40px 0 24px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+.header h1 { font-size:28px; font-weight:700; background:linear-gradient(81.16deg, #FFF 37.23%, rgba(255,255,255,0.5) 81.25%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:8px; font-size:14px; }
+.back-link { display:inline-block; margin-bottom:16px; font-size:13px; }
+
+/* Summary cards */
+.summary { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:32px; }
+.sum-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px 24px; text-align:center; min-width:120px; }
+.sum-num { font-size:28px; font-weight:700; }
+.sum-label { font-size:12px; color:var(--text2); }
+.sum-match .sum-num { color:var(--green); }
+.sum-wrong .sum-num { color:var(--yellow); }
+.sum-miss .sum-num { color:var(--red); }
+.sum-total .sum-num { color:var(--accent-light); }
+
+/* Screen sections */
+.screen { background:var(--bg2); border-radius:16px; margin-bottom:24px; border:1px solid var(--border); overflow:hidden; }
+.screen-header { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+.screen-header:hover { background:var(--bg3); }
+.screen-title { font-size:18px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.screen-stats { display:flex; gap:12px; align-items:center; font-size:13px; }
+.screen-stats span { padding:3px 10px; border-radius:50px; font-weight:600; }
+.s-match { background:rgba(52,199,89,0.15); color:var(--green); }
+.s-wrong { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.s-miss { background:rgba(255,59,48,0.15); color:var(--red); }
+.chevron { transition:transform 0.3s; font-size:18px; color:var(--text2); margin-left:12px; }
+.screen-header.open .chevron { transform:rotate(90deg); }
+
+/* Tables */
+.audit-body { padding:0 20px 20px; display:none; overflow-x:auto; }
+.audit-body.open { display:block; }
+.cat-header { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); padding:14px 0 6px; border-bottom:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:8px; }
+th { text-align:left; padding:8px 6px; color:var(--text2); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:7px 6px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+td:first-child { font-weight:500; white-space:nowrap; max-width:200px; }
+td:nth-child(2), td:nth-child(3) { font-family:'SF Mono',monospace; font-size:12px; color:var(--accent-light); max-width:240px; word-break:break-all; }
+td:nth-child(3) { color:var(--text2); }
+.status { padding:2px 10px; border-radius:50px; font-size:11px; font-weight:600; display:inline-block; white-space:nowrap; }
+.st-match { background:rgba(52,199,89,0.15); color:var(--green); }
+.st-wrong { background:rgba(255,184,0,0.15); color:var(--yellow); }
+.st-miss { background:rgba(255,59,48,0.15); color:var(--red); }
+.st-note { background:rgba(125,79,255,0.15); color:var(--accent-light); }
+td.note { font-size:11px; color:var(--text2); max-width:300px; }
+
+/* Responsive */
+@media (max-width:900px) {
+  td:nth-child(5) { display:none; }
+  .container { padding:12px 8px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a href="index.html" class="back-link">&larr; Назад к трекеру</a>
+
+<div class="header">
+  <h1>Full Design Audit: Figma vs iOS</h1>
+  <p>Поэлементное сравнение каждого UI-элемента с Figma-спецификацией. Дата: 2026-03-29</p>
+</div>
+
+<div class="summary" id="summary"></div>
+
+<div id="screens"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// AUDIT DATA
+// status: "match" | "wrong" | "missing" | "note"
+// ═══════════════════════════════════════════
+
+const AUDIT = [
+  // ─── PROFILE ────────────────────────────
+  {
+    id: "profile", name: "Profile", icon: "👤",
+    sections: [
+      { cat: "Avatar", rows: [
+        { el: "Размер аватара", figma: "154×154 px (NewThemes)", ios: "154×154 (profileHeader.avatarSize)", status: "match" },
+        { el: "Форма аватара", figma: "Hexagon (NewThemes)", ios: "avatarShape = .hexagon", status: "match" },
+        { el: "Glow вокруг аватара", figma: "blur 45, #7D4FFF @0.9", ios: "shadowRadius:45, opacity:0.9, #7D4FFF", status: "match" },
+        { el: "Glow offset", figma: "0,0 (центрировано)", ios: "CGSize(0, 0)", status: "match" },
+        { el: "Glow path", figma: "Hexagonal (повторяет форму)", ios: "Hexagonal UIBezierPath", status: "match" },
+        { el: "Border width (Default)", figma: "4px gradient", ios: "4.0pt gradient из dominant color", status: "match" },
+      ]},
+      { cat: "Имя пользователя", rows: [
+        { el: "Шрифт имени", figma: "Manrope SemiBold 32px", ios: "headingName = Manrope SemiBold 32pt", status: "match" },
+        { el: "Letter-spacing имени", figma: "-1.28px (-4%)", ios: "kern: 32 * -0.04 = -1.28", status: "match" },
+        { el: "Градиент текста", figma: "linear-gradient 81.16deg white→white@50%", ios: "applyGradientTextMask() + applyThemeGradientTextColor()", status: "match" },
+        { el: "Username шрифт", figma: "Manrope Medium 12px", ios: "manropeMedium 12pt", status: "match" },
+        { el: "Username цвет (dark)", figma: "#8D93A1 @80%", ios: "disabledText.withAlphaComponent(0.8)", status: "match" },
+        { el: "Username цвет (light)", figma: "#333740 @60%", ios: "disabledText.withAlphaComponent(0.6)", status: "match" },
+      ]},
+      { cat: "Статистика", rows: [
+        { el: "Число подписчиков — шрифт", figma: "Manrope Medium 20px", ios: "statsNumber = Manrope Regular 20pt", status: "wrong", note: "Medium vs Regular weight" },
+        { el: "Label подписчиков — шрифт", figma: "Manrope Medium 12px", ios: "caption = Manrope Regular 12pt", status: "wrong", note: "Medium vs Regular weight" },
+        { el: "Label opacity", figma: "60%", ios: "disabledText.withAlphaComponent(0.6)", status: "match" },
+        { el: "Gap между колонками", figma: "23px", ios: "statsSpacing = 23", status: "match" },
+        { el: "Bio шрифт", figma: "Manrope Medium 12px", ios: "caption = Manrope Regular 12pt", status: "wrong", note: "Medium vs Regular" },
+      ]},
+      { cat: "Badge (монеты)", rows: [
+        { el: "Размер", figma: "auto (pill shape)", ios: "77×30pt, cornerRadius=15", status: "match" },
+        { el: "Фон badge", figma: "#141517 / #DFE3EE", ios: "fieldBackground token", status: "match" },
+        { el: "Шрифт badge", figma: "Manrope SemiBold 14px, kern -0.56", ios: "bodyBold (Bold 14pt), нет kern", status: "wrong", note: "Bold вместо SemiBold, нет letter-spacing" },
+        { el: "Тень (dark)", figma: "0,8,13 rgba(0,0,0,0.5)", ios: "offset(0,8), radius:13, black @0.5", status: "match" },
+        { el: "Тень (light)", figma: "0,8,13 #B5BECD", ios: "#B5BECD @1.0, offset(0,8), radius:13", status: "match" },
+      ]},
+      { cat: "Stories карточка", rows: [
+        { el: "Фон карточки", figma: "#0C0D0F / #E7EDF7", ios: "storiesCardBackground token", status: "match" },
+        { el: "Border цвет", figma: "#DEDEFF", ios: "storiesCardBorder = #DEDEFF", status: "match" },
+        { el: "Border width", figma: "1px", ios: "1pt", status: "match" },
+        { el: "Corner radius", figma: "24px", ios: "cornerRadii.stories = 24", status: "match" },
+        { el: "Высота секции", figma: "130px", ios: "return 130 в heightForHeader", status: "match" },
+        { el: "Размер аватара истории", figma: "64×64 px", ios: "cellSize = (64, 82), avatar 64×64", status: "match" },
+        { el: "Gap между историями", figma: "20px", ios: "minimumInteritemSpacing = 20", status: "match" },
+        { el: "Horizontal padding", figma: "24px", ios: "contentInset.left = 24", status: "match" },
+        { el: "Gradient border (unviewed)", figma: "A88AFF → 7D50FF, 4px", ios: "storyBorderColors gradient, 4.0pt", status: "match" },
+      ]},
+      { cat: "Photo Grid", rows: [
+        { el: "Columns", figma: "3", ios: "3 columns", status: "match" },
+        { el: "Cell corner radius", figma: "8px", ios: "cornerRadii.small = 8pt (NewThemes)", status: "match" },
+        { el: "Grid gap", figma: "10.84px", ios: "gaps.photoGrid = 10.84", status: "match" },
+        { el: "Screen padding", figma: "12px (NewThemes)", ios: "padding.screenHorizontal = 12", status: "match" },
+        { el: "Cell background", figma: "bg/secondary", ios: "secondBackground", status: "match" },
+      ]},
+      { cat: "Кнопки (чужой профиль)", rows: [
+        { el: "Подписаться — фон", figma: "#7D4FFF (solid)", ios: "primaryAccent", status: "match" },
+        { el: "Подписаться — высота", figma: "40px", ios: "40pt", status: "match" },
+        { el: "Подписаться — radius", figma: "10px", ios: "10pt", status: "match" },
+        { el: "Подписаться — шрифт", figma: "Manrope Regular 12px", ios: "Manrope Regular 12pt", status: "match" },
+        { el: "Сообщение — border", figma: "rgba(text,0.2)", ios: "UIColor.text.withAlphaComponent(0.2)", status: "match" },
+        { el: "Сообщение — border width", figma: "1px", ios: "1.0pt", status: "match" },
+        { el: "Gap между кнопками", figma: "8px", ios: "stackView.spacing = 8", status: "match" },
+      ]},
+      { cat: "Navigation", rows: [
+        { el: "Share icon", figma: "share-forward-line", ios: "mingcute_share-forward-line", status: "match" },
+        { el: "Edit icon", figma: "edit-outline-rounded 20×20", ios: "material-symbols_edit-outline-rounded 20×20", status: "match" },
+        { el: "Edit icon color", figma: "disabled text", ios: "UIColor.disabledText", status: "match" },
+        { el: "Edit icon gap", figma: "10px от имени", ios: "10pt spacing в stack", status: "match" },
+      ]},
+    ]
+  },
+  // ─── FEED ────────────────────────────
+  {
+    id: "feed", name: "Feed (Лента)", icon: "📰",
+    sections: [
+      { cat: "Navigation Bar", rows: [
+        { el: "Заголовок «Лента» — шрифт", figma: "Manrope SemiBold 24px", ios: "headingLarge = Manrope SemiBold 24pt", status: "match" },
+        { el: "Заголовок — letter-spacing", figma: "-0.96px (-4%)", ios: "kern = pointSize * -0.04", status: "match" },
+        { el: "Заголовок — градиент текста", figma: "linear-gradient 81.16deg", ios: "applyGradientTextMask()", status: "match" },
+        { el: "Иконки хедера — opacity", figma: "50%", ios: "нет alpha, 100%", status: "missing", note: "Иконки search/notification/create без opacity" },
+        { el: "Gap между иконками", figma: "16px", ios: "системный UINavigationItem spacing", status: "missing", note: "Нет кастомного spacing" },
+        { el: "Chevron icon", figma: "chevron.down 10pt semibold", ios: "chevron.down 10pt semibold", status: "match" },
+      ]},
+      { cat: "Stories Section", rows: [
+        { el: "Высота stories", figma: "130px", ios: "return 130", status: "match" },
+        { el: "Фон stories card", figma: "#0C0D0F / #E7EDF7", ios: "storiesCardBackground", status: "match" },
+        { el: "Border stories", figma: "#DEDEFF, 1px", ios: "storiesCardBorder, 1pt", status: "match" },
+        { el: "Radius stories card", figma: "24px", ios: "cornerRadii.stories = 24", status: "match" },
+        { el: "Avatar size", figma: "64px", ios: "cellSize.width = 64", status: "match" },
+        { el: "Item gap", figma: "20px", ios: "minimumInteritemSpacing = 20", status: "match" },
+        { el: "Create circle size", figma: "64px", ios: "64×64pt", status: "match" },
+        { el: "Create circle border", figma: "1.5px, disabledText", ios: "1.5pt, UIColor.disabledText", status: "match" },
+      ]},
+      { cat: "РЕКОМЕНДАЦИИ label", rows: [
+        { el: "Текст", figma: "РЕКОМЕНДАЦИИ (uppercase)", ios: "label.text?.uppercased()", status: "match" },
+        { el: "Шрифт", figma: "Manrope Medium 14px", ios: "bodyRegular = Manrope Regular 14pt", status: "wrong", note: "Regular вместо Medium weight" },
+        { el: "Цвет", figma: "disabledText", ios: "UIColor.disabledText", status: "match" },
+      ]},
+      { cat: "Event Card в ленте", rows: [
+        { el: "Фон карточки (dark)", figma: "rgba(255,255,255,0.05)", ios: "eventCardBackground = white@0.05", status: "match" },
+        { el: "Фон карточки (light)", figma: "#E7EDF7", ios: "eventCardBackground = #E7EDF7", status: "match" },
+        { el: "Border (dark)", figma: "white, 1px", ios: "eventCardBorder = white, 1pt", status: "match" },
+        { el: "Border (light)", figma: "#DEDEFF, 1px", ios: "eventCardBorder = #DEDEFF, 1pt", status: "match" },
+        { el: "Corner radius", figma: "32px", ios: "cornerRadii.eventButton = 32", status: "match" },
+        { el: "Avatar size", figma: "40×40px", ios: "40×40pt (XIB)", status: "match" },
+        { el: "Padding внутри карточки", figma: "16px", ios: "16pt (XIB constraints)", status: "match" },
+      ]},
+      { cat: "Кнопки событий", rows: [
+        { el: "«Интересует» — gradient", figma: "linear-gradient 141.77deg A98AFF→7D50FF", ios: "applyThemeGradient() startPt(0.12,0)→endPt(0.88,1)", status: "match" },
+        { el: "«Интересует» — radius", figma: "48px (pill)", ios: "cornerRadii.medium = 12pt", status: "wrong", note: "12px вместо 48px — нужен pill" },
+        { el: "«Интересует» — размер", figma: "155×42px", ios: "~140×56pt (half-width HStack)", status: "wrong", note: "Отличается от Figma" },
+        { el: "«Интересует» — шрифт", figma: "Manrope SemiBold 14px -0.28", ios: "eventButton = SemiBold 14pt", status: "match" },
+        { el: "Star icon size", figma: "~14-16px", ios: "SF Symbol 16pt .medium", status: "match" },
+        { el: "Star icon color", figma: "white on gradient", ios: "tintColor = .white, template", status: "match" },
+        { el: "«Пойду» — opacity текста", figma: "70%", ios: "100% (нет alpha)", status: "missing", note: "Нет opacity на тексте" },
+      ]},
+      { cat: "Tab Bar", rows: [
+        { el: "Высота", figma: "76px (NewThemes) / 72px (Default)", ios: "tabBar.height = 76/72", status: "match" },
+        { el: "Blur (dark)", figma: "backdrop-blur dark", ios: "tabBarBlurStyle = .dark", status: "match" },
+        { el: "Blur (light)", figma: "backdrop-blur light", ios: "tabBarBlurStyle = .light", status: "match" },
+        { el: "Gradient overlay", figma: "transparent→bg color", ios: "CAGradientLayer vertical", status: "match" },
+      ]},
+    ]
+  },
+  // ─── MESSAGES ────────────────────────────
+  {
+    id: "messages", name: "Messages (Сообщения)", icon: "💬",
+    sections: [
+      { cat: "Список диалогов", rows: [
+        { el: "Row height", figma: "85px", ios: "tableView.rowHeight = 85", status: "match" },
+        { el: "Avatar size", figma: "52×52px", ios: "52×52pt (XIB)", status: "match" },
+        { el: "Avatar leading", figma: "16px", ios: "16pt (XIB)", status: "match" },
+        { el: "Name → avatar gap", figma: "12px", ios: "12pt (XIB)", status: "match" },
+        { el: "Name font", figma: "Manrope Medium 16px", ios: "Manrope Medium 16pt", status: "match" },
+        { el: "Name color", figma: "text/primary", ios: ".text", status: "match" },
+        { el: "Preview font", figma: "Manrope Regular 12px", ios: "messagePreview = Manrope 12pt", status: "match" },
+        { el: "Preview color + opacity", figma: "#8D93A1 @70%", ios: "messageColor.withAlphaComponent(0.7)", status: "match" },
+        { el: "Date font", figma: "Manrope Regular 14px", ios: "messageDate = Manrope 14pt", status: "match" },
+        { el: "Date color + opacity", figma: "rgba(141,147,161,0.5)", ios: "messageDateColor.withAlphaComponent(0.5)", status: "match" },
+        { el: "Separator color", figma: "tabBarBorder", ios: ".tabBarBorderColor", status: "match" },
+        { el: "Unread badge bg", figma: "#7D4FFF (accent)", ios: "#7643F8 (XIB hardcoded)", status: "wrong", note: "#7643F8 ≠ #7D4FFF" },
+        { el: "Unread badge font", figma: "Manrope 12px", ios: "System 8pt (XIB)", status: "wrong", note: "System 8pt вместо Manrope 12px" },
+      ]},
+      { cat: "Swipe Actions", rows: [
+        { el: "More bg (dark)", figma: "#1B1B1B", ios: "swipeMoreBackground = #1B1B1B", status: "match" },
+        { el: "More bg (light)", figma: "#C3C9D8", ios: "swipeMoreBackground = #C3C9D8", status: "match" },
+        { el: "Archive bg", figma: "#B398FF", ios: "archiveButtonBackground = #B398FF", status: "match" },
+        { el: "Archive icon", figma: "archive icon", ios: "icon-archive (template)", status: "match" },
+      ]},
+      { cat: "Title Gradient", rows: [
+        { el: "Заголовок «Мои сообщения»", figma: "SemiBold 24px gradient", ios: "applyThemeGradientTextColor()", status: "match" },
+      ]},
+    ]
+  },
+  // ─── CHAT ────────────────────────────
+  {
+    id: "chat", name: "Chat (Чат)", icon: "🗨️",
+    sections: [
+      { cat: "Message Bubbles", rows: [
+        { el: "Sent bg (dark)", figma: "#D0C0FF", ios: "sentMessage = #D0C0FF", status: "match" },
+        { el: "Sent bg (light)", figma: "#D4D7EF", ios: "sentMessage = #D4D7EF", status: "match" },
+        { el: "Received bg (dark)", figma: "#1D1D1D", ios: "receivedMessage = #1D1D1D", status: "match" },
+        { el: "Received bg (light)", figma: "#EFF1F3", ios: "receivedMessage = #EFF1F3", status: "match" },
+        { el: "Text font", figma: "Manrope Medium 16px", ios: "chatBody = Manrope Medium 16pt", status: "match" },
+        { el: "Sent text color (dark)", figma: "dark text", ios: "sentMessageText = #1A1A2E", status: "match" },
+        { el: "Received text color", figma: "text/primary", ios: ".text (theme-aware)", status: "match" },
+        { el: "Max bubble width", figma: "~2/3 screen", ios: "2/3 screen width", status: "match" },
+      ]},
+      { cat: "Bubble Corner Radius (NewThemes)", rows: [
+        { el: "Sent TL/TR/BL", figma: "16/16/16px", ios: "16/16/16pt", status: "match" },
+        { el: "Sent BR", figma: "4px", ios: "4pt", status: "match" },
+        { el: "Received TL/TR/BR", figma: "16/16/16px", ios: "16/16/16pt", status: "match" },
+        { el: "Received BL", figma: "4px", ios: "4pt", status: "match" },
+      ]},
+      { cat: "Timestamp", rows: [
+        { el: "Font", figma: "Manrope Medium 11px", ios: "chatTime = Manrope Medium 11pt", status: "match" },
+        { el: "Opacity", figma: "30%", ios: "text.withAlphaComponent(0.3)", status: "match" },
+        { el: "Read icon (read)", figma: "double-tick, accent color", ios: "double-tick, .primaryAccent", status: "match" },
+        { el: "Read icon (unread)", figma: "one-tick, disabled", ios: "one-tick, .disabledText", status: "match" },
+      ]},
+      { cat: "Date Separator", rows: [
+        { el: "Bg (dark)", figma: "#1D1D1D", ios: "UIColor(hex: 0x1D1D1D)", status: "match" },
+        { el: "Bg (light)", figma: "rgba(255,255,255,0.3)", ios: "white.withAlphaComponent(0.3)", status: "match" },
+        { el: "Corner radius", figma: "8px", ios: "8pt", status: "match" },
+        { el: "Text font", figma: "Manrope Medium 12px", ios: "Manrope Medium 12pt", status: "match" },
+        { el: "Text color", figma: "#8D93A1", ios: ".disabledText", status: "match" },
+      ]},
+      { cat: "Input Bar", rows: [
+        { el: "Input bg (dark)", figma: "#0C0D0F", ios: "chatInputBackground = #0C0D0F", status: "match" },
+        { el: "Input bg (light)", figma: "#CED4DF", ios: "chatInputBackground = #CED4DF", status: "match" },
+        { el: "Border color", figma: "#DEDEFF", ios: "storiesCardBorder = #DEDEFF", status: "match" },
+        { el: "Border width", figma: "1px", ios: "0.5pt", status: "wrong", note: "0.5pt вместо 1px" },
+        { el: "Corner radius", figma: "24px", ios: "chatInput = 24pt", status: "match" },
+        { el: "Text font", figma: "Manrope Medium 16px", ios: "chatBody = Manrope Medium 16pt", status: "match" },
+        { el: "Input size", figma: "279×32px", ios: "285×44pt (XIB)", status: "wrong", note: "285×44 vs 279×32" },
+        { el: "Plus icon tint", figma: "white @60%", ios: "white @60% (XIB)", status: "match" },
+        { el: "Send icon color", figma: "purple accent", ios: "#D1BFFF (lighter purple)", status: "wrong", note: "#D1BFFF ≠ #7D4FFF" },
+      ]},
+      { cat: "Bugs", rows: [
+        { el: "Media messages → пустые баблы", figma: "Показывать image/video", ios: ".image/.video типы не обработаны", status: "missing", note: "Нужна реализация MediaMessageTableViewCell" },
+        { el: "Два контекстных меню", figma: "Одно меню", ios: "system + custom overlap", status: "missing", note: "UIContextMenu + ContextView конфликтуют" },
+      ]},
+    ]
+  },
+  // ─── EVENTS ────────────────────────────
+  {
+    id: "events", name: "Events (Мероприятия)", icon: "🎉",
+    sections: [
+      { cat: "Event Card", rows: [
+        { el: "Фон (dark)", figma: "rgba(255,255,255,0.05)", ios: "eventCardBackground = white@0.05", status: "match" },
+        { el: "Фон (light)", figma: "#E7EDF7", ios: "eventCardBackground = #E7EDF7", status: "match" },
+        { el: "Border (dark)", figma: "white, 1px", ios: "eventCardBorder = white, 1pt", status: "match" },
+        { el: "Border (light)", figma: "#DEDEFF, 1px", ios: "eventCardBorder = #DEDEFF, 1pt", status: "match" },
+        { el: "Corner radius", figma: "32px", ios: "cornerRadii.eventButton = 32pt (top/bottom split)", status: "match" },
+      ]},
+      { cat: "Кнопки", rows: [
+        { el: "«Интересует» gradient", figma: "A98AFF→7D50FF (141.77deg)", ios: "applyThemeGradient()", status: "match" },
+        { el: "«Интересует» radius", figma: "48px (pill)", ios: "cornerRadii.medium = 12pt", status: "wrong", note: "12pt вместо 48pt pill shape" },
+        { el: "«Интересует» размер", figma: "155×42px", ios: "140×56pt (fillEqually HStack)", status: "wrong", note: "Больше и выше чем в Figma" },
+        { el: "«Интересует» шрифт", figma: "Manrope SemiBold 14px -0.28", ios: "eventButton = SemiBold 14pt", status: "match" },
+        { el: "«Интересует» letter-spacing", figma: "-0.28px", ios: "нет kern", status: "missing", note: "Letter-spacing не применён" },
+        { el: "«Пойду» opacity", figma: "70% текст", ios: "100%", status: "missing", note: "Нет alpha на тексте" },
+        { el: "«Пойду» шрифт", figma: "SemiBold 14px", ios: "eventButton = SemiBold 14pt", status: "match" },
+        { el: "Star icon", figma: "16px white on gradient", ios: "16pt .medium, .white, template", status: "match" },
+      ]},
+      { cat: "Stats", rows: [
+        { el: "Stats text font", figma: "Manrope Regular 12px", ios: "statsLabel = Manrope 12pt", status: "match" },
+        { el: "Stats text color", figma: "#8D93A1", ios: ".disabledText = #8D93A1", status: "match" },
+        { el: "Event title font", figma: "Manrope Regular 15px", ios: "eventTitle = Manrope 15pt", status: "match" },
+      ]},
+      { cat: "Event Detail", rows: [
+        { el: "Кнопки — radius (detail)", figma: "48px (pill)", ios: "Constants.cornerRadius = 10pt", status: "wrong", note: "10pt хардкод вместо pill" },
+        { el: "White bar (light theme)", figma: "Нет полосы", ios: "headerView 44px height", status: "missing", note: "Белая полоса 44px в light theme" },
+        { el: "Title gradient", figma: "Heading gradient", ios: "applyThemeGradientTextColor()", status: "match" },
+      ]},
+    ]
+  },
+  // ─── QR ────────────────────────────
+  {
+    id: "qr", name: "QR", icon: "📷",
+    sections: [
+      { cat: "QR Card", rows: [
+        { el: "Фон (dark)", figma: "rgba(255,255,255,0.05)", ios: "qrCardBackground = white@0.05", status: "match" },
+        { el: "Фон (light)", figma: "rgba(0,0,0,0.05)", ios: "qrCardBackground = black@0.05", status: "match" },
+        { el: "Corner radius", figma: "32px", ios: "cornerRadii.eventCard = 32pt", status: "match" },
+        { el: "Размер карточки", figma: "341×341px", ios: "290×450pt (XIB itemSize)", status: "wrong", note: "Сильно отличается от Figma" },
+        { el: "QR code внутри карточки", figma: "297.96×297.96, offset 22/21", ios: "258×258 в imageContentView", status: "wrong", note: "Меньше чем Figma, пропорции другие" },
+      ]},
+      { cat: "Tab Switcher", rows: [
+        { el: "Container bg (dark)", figma: "#131416", ios: "UIColor(hex: 0x131416)", status: "match" },
+        { el: "Container bg (light)", figma: "rgba(255,255,255,0.2)", ios: "white.withAlphaComponent(0.2)", status: "match" },
+        { el: "Container border (dark)", figma: "#DEDEFF", ios: "#DEDEFF, 1pt", status: "match" },
+        { el: "Container border (light)", figma: "rgba(255,255,255,0.5)", ios: "white.withAlpha(0.5), 1pt", status: "match" },
+        { el: "Container radius", figma: "48px (pill)", ios: "bounds.height / 2", status: "match" },
+        { el: "Active tab gradient", figma: "A98AFF→7D50FF (140.78deg)", ios: "CAGradientLayer + gradientStart/End", status: "match" },
+        { el: "Active tab border", figma: "white", ios: "borderColor = white, 1pt", status: "match" },
+        { el: "Inactive tab opacity", figma: "70%", ios: "alpha=0.70 в XIB (dark only)", status: "wrong", note: "Light theme: нет чёрного текста @70%" },
+      ]},
+      { cat: "User ID & Button", rows: [
+        { el: "@ symbol color", figma: "#B398FF на @", ios: "Нет user ID в коде", status: "missing", note: "Весь блок user ID отсутствует" },
+        { el: "User ID text", figma: "Manrope Medium 16px", ios: "Не реализован", status: "missing" },
+        { el: "«Заказать QR» шрифт", figma: "Manrope Medium 16px", ios: "Manrope-SemiBold 16pt (XIB)", status: "wrong", note: "SemiBold вместо Medium" },
+        { el: "«Заказать QR» height", figma: "58px, radius 24px", ios: "36pt height, нет radius", status: "wrong", note: "Сильно меньше" },
+      ]},
+      { cat: "Page Dots", rows: [
+        { el: "Dots indicator", figma: "40×6px, 4 dots", ios: "UIPageControl (standard)", status: "note", note: "Стандартный iOS control" },
+      ]},
+    ]
+  },
+  // ─── TAB BAR ────────────────────────────
+  {
+    id: "tabbar", name: "Tab Bar", icon: "🔽",
+    sections: [
+      { cat: "Container", rows: [
+        { el: "Высота", figma: "76px / 72px (Default)", ios: "tabBar.height = 76/72", status: "match" },
+        { el: "Bg color", figma: "#272729", ios: "tabBarBackground = #272729", status: "match" },
+        { el: "Blur (dark)", figma: "dark blur", ios: ".dark blur, radius:14", status: "match" },
+        { el: "Blur (light)", figma: "light blur", ios: ".systemUltraThinMaterialLight, radius:14", status: "match" },
+        { el: "Bg opacity", figma: "semi-transparent + blur", ios: "dark: #272729 @0.7, light: white @0.3", status: "match" },
+        { el: "Top corner radius", figma: "16px", ios: "cornerRadii.tabbarTop = 16 (token exists)", status: "note", note: "Токен есть, нужна проверка применения" },
+        { el: "Gradient overlay", figma: "transparent→bg color (vertical)", ios: "CAGradientLayer(0.5,0)→(0.5,1)", status: "match" },
+      ]},
+      { cat: "Icons", rows: [
+        { el: "Icon size", figma: "20px", ios: "sizes.tabbarIcon = 20 (token)", status: "match" },
+        { el: "Selected (dark)", figma: "white", ios: "tabBarSelectedColor = white", status: "match" },
+        { el: "Selected (light)", figma: "#0E0E0E", ios: "tabBarSelectedColor = #0E0E0E", status: "match" },
+        { el: "Unselected (dark)", figma: "#8D93A1", ios: "tabBarUnselected = #8D93A1", status: "match" },
+        { el: "Unselected (light)", figma: "#888888", ios: "tabBarUnselected = #888888", status: "match" },
+        { el: "Tab labels", figma: "hidden", ios: "items.title = nil", status: "match" },
+      ]},
+      { cat: "Center Button (QR/AI)", rows: [
+        { el: "Размер", figma: "65×65px", ios: "middleButtonSize = (65,65)", status: "match" },
+        { el: "Форма", figma: "Circle", ios: "cornerRadius = width/2", status: "match" },
+        { el: "Top inset", figma: "above tab bar", ios: "middleButtonTopInset = 8", status: "match" },
+        { el: "Icon", figma: "QR/AI icon", ios: "ai_icon (SVG)", status: "match" },
+      ]},
+      { cat: "Profile Avatar Tab", rows: [
+        { el: "Размер аватара", figma: "32px circle", ios: "32×32pt, cornerRadius=16", status: "match" },
+        { el: "Позиция", figma: "Поверх 5-й вкладки", ios: "addSubview on tabBar", status: "match" },
+      ]},
+    ]
+  },
+  // ─── TOKENS ────────────────────────────
+  {
+    id: "tokens", name: "Token System", icon: "🎨",
+    sections: [
+      { cat: "Colors", rows: [
+        { el: "bg/primary dark", figma: "#08090B", ios: "0x08090B", status: "match" },
+        { el: "bg/primary light", figma: "#DEE3EE", ios: "0xDEE3EE", status: "match" },
+        { el: "bg/secondary dark", figma: "#0C0D0F", ios: "0x0C0D0F", status: "match" },
+        { el: "bg/secondary light", figma: "#E7EDF7", ios: "0xE7EDF7", status: "match" },
+        { el: "bg/field dark", figma: "#141517", ios: "0x141517", status: "match" },
+        { el: "bg/field light", figma: "#DFE3EE", ios: "0xDFE3EE", status: "match" },
+        { el: "text/primary dark", figma: "#FFFFFF", ios: ".white", status: "match" },
+        { el: "text/primary light", figma: "#0E0E0E", ios: "0x0E0E0E", status: "match" },
+        { el: "text/disabled dark", figma: "#8D93A1", ios: "0x8D93A1", status: "match" },
+        { el: "text/disabled light", figma: "#333740", ios: "0x333740", status: "match" },
+        { el: "accent/primary", figma: "#7D4FFF", ios: "0x7D4FFF", status: "match" },
+        { el: "accent/gradient-start", figma: "#A88AFF", ios: "0xA88AFF", status: "match" },
+        { el: "accent/gradient-end", figma: "#7D50FF", ios: "0x7D50FF", status: "match" },
+        { el: "chat/sent dark", figma: "#D0C0FF", ios: "0xD0C0FF", status: "match" },
+        { el: "chat/sent light", figma: "#D4D7EF", ios: "0xD4D7EF", status: "match" },
+        { el: "chat/received dark", figma: "#1D1D1D", ios: "0x1D1D1D", status: "match" },
+        { el: "chat/received light", figma: "#EFF1F3", ios: "0xEFF1F3", status: "match" },
+        { el: "status/online", figma: "#94ED73", ios: "0x94ED73", status: "match" },
+        { el: "border/stories-card", figma: "#DEDEFF", ios: "0xDEDEFF", status: "match" },
+        { el: "qrCardBackground dark", figma: "rgba(255,255,255,0.05)", ios: "white.withAlpha(0.05)", status: "match" },
+        { el: "qrCardBackground light", figma: "rgba(0,0,0,0.05)", ios: "black.withAlpha(0.05)", status: "match" },
+      ]},
+      { cat: "Typography", rows: [
+        { el: "Heading/Large", figma: "Manrope 600 24px -0.96", ios: "SemiBold 24pt, kern -4%", status: "match" },
+        { el: "Heading/Name", figma: "Manrope 600 32px -1.28", ios: "SemiBold 32pt, kern -4%", status: "match" },
+        { el: "Body/Regular", figma: "Manrope 400 14px", ios: "Regular 14pt", status: "match" },
+        { el: "Body/Medium", figma: "Manrope 500 14px", ios: "Medium 14pt", status: "match" },
+        { el: "Body/Bold", figma: "Manrope 700 14px", ios: "Bold 14pt", status: "match" },
+        { el: "Caption", figma: "Manrope 400 12px", ios: "Regular 12pt", status: "match" },
+        { el: "Chat/Body", figma: "Manrope 500 16px", ios: "Medium 16pt", status: "match" },
+        { el: "Chat/Time", figma: "Manrope 500 11px", ios: "Medium 11pt", status: "match" },
+        { el: "Message/Name", figma: "Manrope 500 16px", ios: "SemiBold 16pt", status: "wrong", note: "SemiBold вместо Medium" },
+        { el: "Message/Preview", figma: "Manrope 400 12px", ios: "Regular 12pt", status: "match" },
+        { el: "Event/Title", figma: "Manrope 400 15px", ios: "Regular 15pt", status: "match" },
+        { el: "Event/Button", figma: "Manrope 600 14px -0.28", ios: "SemiBold 14pt, нет kern", status: "wrong", note: "-0.28px kern не применён" },
+        { el: "Button (Bangers)", figma: "Bangers 400 16px +0.32", ios: "Bangers 16pt", status: "match" },
+        { el: "TabBar", figma: "Manrope 400 10px", ios: "Regular 10pt", status: "match" },
+      ]},
+      { cat: "Spacing & Radius", rows: [
+        { el: "cornerRadii.small", figma: "8px (NewThemes)", ios: "8pt", status: "match" },
+        { el: "cornerRadii.medium", figma: "12px (NewThemes)", ios: "12pt", status: "match" },
+        { el: "cornerRadii.large", figma: "20px", ios: "20pt", status: "match" },
+        { el: "cornerRadii.stories", figma: "24px", ios: "24pt", status: "match" },
+        { el: "cornerRadii.pill", figma: "50px", ios: "50pt", status: "match" },
+        { el: "cornerRadii.chatInput", figma: "24px", ios: "24pt", status: "match" },
+        { el: "cornerRadii.eventCard", figma: "32px", ios: "32pt", status: "match" },
+        { el: "cornerRadii.photoGrid", figma: "8px", ios: "8pt", status: "match" },
+        { el: "sizes.avatarMessage", figma: "52px", ios: "52pt", status: "match" },
+        { el: "sizes.avatarStories", figma: "64px", ios: "64pt", status: "match" },
+        { el: "gaps.photoGrid", figma: "10.84px", ios: "10.84pt", status: "match" },
+        { el: "gaps.storiesItem", figma: "20px", ios: "20pt", status: "match" },
+        { el: "padding.screenHorizontal", figma: "12px", ios: "12pt", status: "match" },
+      ]},
+    ]
+  },
+  // ─── CRASHES ────────────────────────────
+  {
+    id: "crashes", name: "Crash Fixes", icon: "💥",
+    sections: [
+      { cat: "Critical", rows: [
+        { el: "Array bounds — StoryPrepareVC", figma: "safe access", ios: "bounds check added", status: "match" },
+        { el: "Force cast — cellForItemAt", figma: "safe cast", ios: "as? + guard in 7 places", status: "match" },
+        { el: "Empty list — MessengerVC:316", figma: "guard empty", ios: "guard lastMessageIndex >= 0", status: "match" },
+        { el: "Lifecycle — ChatsVC:96", figma: "viewWillDisappear", ios: "super.viewWillDisappear fixed", status: "match" },
+        { el: "Cyrillic var — MediaMessageCell", figma: "cellDelegate (Latin)", ios: "renamed to cellDelegate", status: "match" },
+        { el: "#colorLiteral — CommentsVC", figma: "theme token", ios: "UIColor.primaryAccent", status: "match" },
+      ]},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+
+function countAll() {
+  let m=0, w=0, mi=0, n=0;
+  AUDIT.forEach(s => s.sections.forEach(sec => sec.rows.forEach(r => {
+    if (r.status==="match") m++;
+    else if (r.status==="wrong") w++;
+    else if (r.status==="missing") mi++;
+    else n++;
+  })));
+  return {match:m, wrong:w, missing:mi, note:n, total:m+w+mi+n};
+}
+
+function countScreen(screen) {
+  let m=0, w=0, mi=0, n=0;
+  screen.sections.forEach(sec => sec.rows.forEach(r => {
+    if (r.status==="match") m++;
+    else if (r.status==="wrong") w++;
+    else if (r.status==="missing") mi++;
+    else n++;
+  }));
+  return {match:m, wrong:w, missing:mi, note:n, total:m+w+mi+n};
+}
+
+// Summary
+const c = countAll();
+document.getElementById("summary").innerHTML = `
+  <div class="sum-card sum-total"><div class="sum-num">${c.total}</div><div class="sum-label">Всего элементов</div></div>
+  <div class="sum-card sum-match"><div class="sum-num">${c.match}</div><div class="sum-label">Совпадает</div></div>
+  <div class="sum-card sum-wrong"><div class="sum-num">${c.wrong}</div><div class="sum-label">Расхождение</div></div>
+  <div class="sum-card sum-miss"><div class="sum-num">${c.missing}</div><div class="sum-label">Отсутствует</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--accent-light)">${Math.round(c.match/c.total*100)}%</div><div class="sum-label">Соответствие</div></div>
+`;
+
+// Screens
+const cont = document.getElementById("screens");
+AUDIT.forEach(screen => {
+  const sc = countScreen(screen);
+  const pct = Math.round(sc.match/sc.total*100);
+  let html = `<div class="screen">
+    <div class="screen-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+      <div class="screen-title"><span style="font-size:22px">${screen.icon}</span> ${screen.name}</div>
+      <div class="screen-stats">
+        <span class="s-match">${sc.match}</span>
+        <span class="s-wrong">${sc.wrong}</span>
+        <span class="s-miss">${sc.missing}</span>
+        <span style="font-weight:700">${pct}%</span>
+        <span class="chevron">&#9654;</span>
+      </div>
+    </div>
+    <div class="audit-body">`;
+
+  screen.sections.forEach(sec => {
+    html += `<div class="cat-header">${sec.cat}</div>
+    <table><tr><th>Элемент</th><th>Figma</th><th>iOS</th><th>Статус</th><th>Примечание</th></tr>`;
+    sec.rows.forEach(r => {
+      const cls = r.status==="match"?"st-match":r.status==="wrong"?"st-wrong":r.status==="missing"?"st-miss":"st-note";
+      const label = r.status==="match"?"OK":r.status==="wrong"?"WRONG":r.status==="missing"?"MISSING":"NOTE";
+      html += `<tr>
+        <td>${r.el}</td>
+        <td>${r.figma}</td>
+        <td>${r.ios}</td>
+        <td><span class="status ${cls}">${label}</span></td>
+        <td class="note">${r.note||""}</td>
+      </tr>`;
+    });
+    html += `</table>`;
+  });
+
+  html += `</div></div>`;
+  cont.innerHTML += html;
+});
+</script>
+</body>
+</html>
