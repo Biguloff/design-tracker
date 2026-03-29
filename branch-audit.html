@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Аудит веток: pixel-perfect-tokens vs design-tokens-migration</title>
+<style>
+:root {
+  --bg: #08090B;
+  --bg2: #0C0D0F;
+  --bg3: #141517;
+  --accent: #7D4FFF;
+  --accent-light: #B298FF;
+  --green: #34C759;
+  --yellow: #FFB800;
+  --red: #FF3B30;
+  --blue: #0A84FF;
+  --teal: #30B0C7;
+  --text: #FFFFFF;
+  --text2: #8D93A1;
+  --border: #29292E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Manrope',system-ui,-apple-system,sans-serif; line-height:1.6; }
+a { color:var(--accent-light); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.container { max-width:1400px; margin:0 auto; padding:24px 16px; }
+
+.back-link { display:inline-block; margin-bottom:16px; font-size:13px; }
+.header { text-align:center; padding:40px 0 24px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+.header h1 { font-size:28px; font-weight:700; background:linear-gradient(81.16deg, #FFF 37.23%, rgba(255,255,255,0.5) 81.25%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:8px; font-size:14px; }
+.updated { color:var(--text2); font-size:12px; margin-top:4px; }
+
+/* Branch labels */
+.branch { display:inline-block; padding:3px 10px; border-radius:50px; font-size:11px; font-weight:700; font-family:'SF Mono',monospace; }
+.branch-ours { background:rgba(125,79,255,0.2); color:var(--accent-light); border:1px solid rgba(125,79,255,0.3); }
+.branch-theirs { background:rgba(48,176,199,0.2); color:var(--teal); border:1px solid rgba(48,176,199,0.3); }
+
+/* Summary stats */
+.summary { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:32px; }
+.sum-card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px 24px; text-align:center; min-width:130px; }
+.sum-num { font-size:28px; font-weight:700; }
+.sum-label { font-size:12px; color:var(--text2); }
+
+/* Comparison table */
+.comp-section { background:var(--bg2); border-radius:20px; margin-bottom:24px; border:1px solid var(--border); overflow:hidden; }
+.comp-header { padding:20px 24px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.comp-header:hover { background:var(--bg3); }
+.comp-title { font-size:18px; font-weight:600; display:flex; align-items:center; gap:12px; }
+.chevron { transition:transform 0.3s; font-size:20px; color:var(--text2); }
+.comp-header.open .chevron { transform:rotate(90deg); }
+.comp-body { padding:0 24px 24px; display:none; }
+.comp-body.open { display:block; }
+
+/* Comparison grid */
+.cmp-table { width:100%; border-collapse:collapse; font-size:13px; }
+.cmp-table th { text-align:left; padding:10px 12px; border-bottom:2px solid var(--border); color:var(--text2); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+.cmp-table td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.cmp-table tr:last-child td { border-bottom:none; }
+.col-aspect { width:22%; font-weight:500; }
+.col-branch { width:39%; }
+.col-ours { background:rgba(125,79,255,0.03); }
+.col-theirs { background:rgba(48,176,199,0.03); }
+code { background:var(--bg3); padding:2px 6px; border-radius:4px; font-size:12px; font-family:'SF Mono',monospace; color:var(--accent-light); }
+.code-block { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px; font-family:'SF Mono',monospace; font-size:12px; line-height:1.6; overflow-x:auto; margin:8px 0; white-space:pre; color:var(--text2); }
+
+/* Verdict badges */
+.verdict { display:inline-block; padding:3px 10px; border-radius:50px; font-size:11px; font-weight:600; }
+.v-same { background:rgba(52,199,89,0.12); color:var(--green); }
+.v-ours { background:rgba(125,79,255,0.15); color:var(--accent-light); }
+.v-theirs { background:rgba(48,176,199,0.15); color:var(--teal); }
+.v-conflict { background:rgba(255,59,48,0.15); color:var(--red); }
+.v-merge { background:rgba(255,184,0,0.15); color:var(--yellow); }
+
+/* Highlight cards */
+.insight-card { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin:16px 0; }
+.insight-card h4 { font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.insight-card p, .insight-card ul { font-size:13px; color:var(--text2); }
+.insight-card ul { padding-left:20px; }
+.insight-card li { margin:4px 0; }
+
+/* Recommendations */
+.rec-list { list-style:none; padding:0; }
+.rec-list li { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px 20px; margin:8px 0; display:flex; align-items:flex-start; gap:12px; font-size:13px; }
+.rec-num { background:var(--accent); color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.rec-text b { color:var(--text); }
+.rec-text { color:var(--text2); }
+
+/* Theme comparison cards */
+.themes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin:16px 0; }
+.theme-card { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:14px; }
+.theme-name { font-size:14px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.theme-colors { display:flex; gap:4px; margin-bottom:8px; }
+.color-dot { width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); }
+.theme-meta { font-size:11px; color:var(--text2); }
+
+/* Stats comparison */
+.stat-row { display:flex; gap:16px; margin:8px 0; align-items:center; }
+.stat-label { font-size:13px; color:var(--text2); min-width:150px; }
+.stat-bar { flex:1; height:24px; background:var(--bg); border-radius:6px; overflow:hidden; position:relative; display:flex; }
+.stat-fill-ours { height:100%; background:linear-gradient(90deg, rgba(125,79,255,0.5), var(--accent)); }
+.stat-fill-theirs { height:100%; background:linear-gradient(90deg, rgba(48,176,199,0.5), var(--teal)); }
+.stat-val { font-size:12px; font-weight:600; position:absolute; right:8px; top:3px; }
+
+/* Merge plan */
+.merge-step { display:flex; gap:16px; align-items:flex-start; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.merge-step:last-child { border-bottom:none; }
+.step-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.step-take { background:rgba(52,199,89,0.15); }
+.step-adapt { background:rgba(255,184,0,0.15); }
+.step-skip { background:rgba(255,59,48,0.15); }
+.step-body h4 { font-size:14px; margin-bottom:4px; }
+.step-body p { font-size:12px; color:var(--text2); }
+
+@media (max-width:768px) {
+  .cmp-table { font-size:12px; }
+  .col-aspect { width:30%; }
+  .col-branch { width:70%; }
+  .cmp-table .col-theirs { display:none; }
+  .themes-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="index.html">&larr; Назад к Design Tracker</a>
+
+<div class="header">
+  <h1>Аудит веток: iOS Design System Migration</h1>
+  <p>Сравнение подходов <span class="branch branch-ours">feature/pixel-perfect-tokens</span> (Серж) vs <span class="branch branch-theirs">feature/design-tokens-migration</span> (Таймураз)</p>
+  <div class="updated">Дата аудита: 2026-03-29</div>
+</div>
+
+<!-- Summary Stats -->
+<div class="summary">
+  <div class="sum-card"><div class="sum-num" style="color:var(--accent-light)">247</div><div class="sum-label">Файлов (Таймураз)</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--accent)">~40</div><div class="sum-label">Файлов (наши)</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--teal)">5</div><div class="sum-label">Тем у Таймураза</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--accent-light)">3</div><div class="sum-label">Тем у нас</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--green)">37</div><div class="sum-label">Color-токенов (Т)</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--green)">45</div><div class="sum-label">Color-токенов (мы)</div></div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 1: Architecture -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>🏗</span> Архитектура Token System</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th class="col-aspect">Аспект</th>
+          <th class="col-branch col-ours"><span class="branch branch-ours">pixel-perfect-tokens</span></th>
+          <th class="col-branch col-theirs"><span class="branch branch-theirs">design-tokens-migration</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-aspect">Token-файлы</td>
+          <td class="col-ours">
+            <code>ThemeColors.swift</code> — 45 токенов<br>
+            <code>ThemeFonts.swift</code> — 12 токенов<br>
+            <code>ThemeIcons.swift</code> — 28 иконок<br>
+            <code>ThemeLayout.swift</code> — 8 sub-structs (spacing, cornerRadii, sizes, gaps, padding, chatBubbleCorners)<br>
+            <code>ThemeEffects.swift</code> — shadows (4 уровня), blur, glass, headingGradient<br>
+            <code>ThemeBranding.swift</code> — URLs, logos, tab titles
+          </td>
+          <td class="col-theirs">
+            <code>ThemeColors.swift</code> — 37 токенов<br>
+            <code>ThemeFonts.swift</code> — 8 токенов<br>
+            <code>ThemeIcons.swift</code> — 28 иконок<br>
+            <code>ThemeLayout.swift</code> — 5 sub-structs (без gaps, padding, sizes, chatBubbleCorners)<br>
+            <code>ThemeEffects.swift</code> — те же shadows + glass (добавлены позже)<br>
+            <code>ThemeBranding.swift</code> — аналогично
+          </td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Глобальный доступ</td>
+          <td class="col-ours"><code>ThemeTokenStorage.colors</code> / <code>.fonts</code> / <code>.layout</code> / <code>.effects</code><br>enum с <code>nonisolated(unsafe) static var</code></td>
+          <td class="col-theirs">Идентично — <code>ThemeTokenStorage</code> enum<br>Тот же паттерн <code>nonisolated(unsafe)</code></td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Подписка на смену темы</td>
+          <td class="col-ours">Combine <code>$currentTheme.sink</code><br>Протокол <code>Themeable</code></td>
+          <td class="col-theirs">Идентично — Combine + <code>Themeable</code></td>
+        </tr>
+        <tr>
+          <td class="col-aspect">UIColor маппинг</td>
+          <td class="col-ours">34 <code>static var</code> в UIColor extension<br>Все через <code>ThemeTokenStorage.colors</code></td>
+          <td class="col-theirs">34 <code>static/class var</code> в UIColor extension<br>Аналогично через ThemeTokenStorage</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Вердикт</td>
+          <td colspan="2" style="text-align:center"><span class="verdict v-same">Архитектура идентична</span> — обе ветки от одной базы. Наша расширена по layout/effects.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 2: Themes -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>🎨</span> Темы</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+
+    <div class="insight-card">
+      <h4>⚠️ Ключевое расхождение</h4>
+      <p>Таймураз <b>удалил</b> NewDarkTheme и NewLightTheme, заменив их на 5 новых тем. У нас эти 2 темы — основа всего Figma-дизайна. Это главный конфликт при merge.</p>
+    </div>
+
+    <h3 style="margin:20px 0 12px;font-size:15px">Наши темы (3)</h3>
+    <div class="themes-grid">
+      <div class="theme-card">
+        <div class="theme-name">🌙 NewDarkTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#08090B"></div>
+          <div class="color-dot" style="background:#141517"></div>
+          <div class="color-dot" style="background:#7D4FFF"></div>
+          <div class="color-dot" style="background:#B298FF"></div>
+          <div class="color-dot" style="background:#FFFFFF"></div>
+        </div>
+        <div class="theme-meta">Figma reference, Manrope, hex аватары, blur+glass</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name">☀️ NewLightTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#FFFFFF"></div>
+          <div class="color-dot" style="background:#F5F5F5"></div>
+          <div class="color-dot" style="background:#7D4FFF"></div>
+          <div class="color-dot" style="background:#DEDEFF"></div>
+          <div class="color-dot" style="background:#1A1A2E"></div>
+        </div>
+        <div class="theme-meta">Figma reference, Manrope, hex аватары, blur+glass</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name">🔵 DefaultTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#000000"></div>
+          <div class="color-dot" style="background:#1C1C1E"></div>
+          <div class="color-dot" style="background:#6C5CE7"></div>
+          <div class="color-dot" style="background:#A0A0A0"></div>
+          <div class="color-dot" style="background:#FFFFFF"></div>
+        </div>
+        <div class="theme-meta">Legacy default, круглые аватары, без blur/glass</div>
+      </div>
+    </div>
+
+    <h3 style="margin:20px 0 12px;font-size:15px">Темы Таймураза (5)</h3>
+    <div class="themes-grid">
+      <div class="theme-card">
+        <div class="theme-name"><span style="color:var(--teal)">⚡</span> DarkNeonTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#080A0A"></div>
+          <div class="color-dot" style="background:#050506"></div>
+          <div class="color-dot" style="background:#B399FF"></div>
+          <div class="color-dot" style="background:#FF00FF"></div>
+          <div class="color-dot" style="background:#00F5FF"></div>
+        </div>
+        <div class="theme-meta">Дефолт у Таймураза, неон, Manrope SemiBold, крупные заголовки (24pt)</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name"><span style="color:var(--teal)">🔲</span> DefaultTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#141417"></div>
+          <div class="color-dot" style="background:#0D0D10"></div>
+          <div class="color-dot" style="background:#7D4FFF"></div>
+          <div class="color-dot" style="background:#B298FF"></div>
+          <div class="color-dot" style="background:#FFFFFF"></div>
+        </div>
+        <div class="theme-meta">Purple dark, Manrope+Bangers, asset-based цвета</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name"><span style="color:var(--teal)">⬜</span> MinimalistTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#FFFFFF"></div>
+          <div class="color-dot" style="background:#F8F9FA"></div>
+          <div class="color-dot" style="background:#4A90D9"></div>
+          <div class="color-dot" style="background:#2C3E50"></div>
+          <div class="color-dot" style="background:#1A252F"></div>
+        </div>
+        <div class="theme-meta">Светлая, sky-blue, Montserrat, чистая палитра</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name"><span style="color:var(--teal)">🎞</span> RetroTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#FFF8E7"></div>
+          <div class="color-dot" style="background:#F0E6D0"></div>
+          <div class="color-dot" style="background:#D4763B"></div>
+          <div class="color-dot" style="background:#6B4226"></div>
+          <div class="color-dot" style="background:#2C1810"></div>
+        </div>
+        <div class="theme-meta">Тёплые тона, serif-influenced, кремовый фон</div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-name"><span style="color:var(--teal)">🌿</span> NatureTheme</div>
+        <div class="theme-colors">
+          <div class="color-dot" style="background:#F0F7F0"></div>
+          <div class="color-dot" style="background:#E8F0E8"></div>
+          <div class="color-dot" style="background:#2E7D32"></div>
+          <div class="color-dot" style="background:#1B5E20"></div>
+          <div class="color-dot" style="background:#0D3B0D"></div>
+        </div>
+        <div class="theme-meta">Зелёный, мятный, органичная палитра</div>
+      </div>
+    </div>
+
+    <table class="cmp-table" style="margin-top:20px">
+      <thead><tr><th class="col-aspect">Аспект</th><th class="col-branch col-ours">Мы</th><th class="col-branch col-theirs">Таймураз</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="col-aspect">NewDarkTheme / NewLightTheme</td>
+          <td class="col-ours"><span class="verdict v-ours">Есть</span> — основа Figma-дизайна</td>
+          <td class="col-theirs"><span class="verdict v-conflict">Удалены</span> — заменены на 5 новых тем</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Дефолтная тема</td>
+          <td class="col-ours">NewDarkTheme (index 0)</td>
+          <td class="col-theirs">DarkNeonTheme (index 1)</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Шрифтовые вариации</td>
+          <td class="col-ours">12 токенов, Manrope для всех тем</td>
+          <td class="col-theirs">8 токенов, разные шрифты по темам (Montserrat, Bangers)</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Figma-соответствие</td>
+          <td class="col-ours"><span class="verdict v-ours">Pixel-perfect</span> — токены из Figma Variables</td>
+          <td class="col-theirs"><span class="verdict v-theirs">Творческие вариации</span> — собственные палитры</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 3: Token Coverage -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>📊</span> Покрытие токенами</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <table class="cmp-table">
+      <thead><tr><th class="col-aspect">Категория</th><th class="col-branch col-ours">Мы</th><th class="col-branch col-theirs">Таймураз</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="col-aspect">ThemeColors</td>
+          <td class="col-ours">45 токенов: все из Figma + <code>eventCardBackground</code>, <code>eventCardBorder</code>, <code>chatBubbleTimeText</code>, <code>gradientStart/End</code></td>
+          <td class="col-theirs">37 токенов: +10 новых (<code>sentMessageText</code>, <code>receivedMessageText</code>, <code>hashtagColor</code>, <code>switchOn/Off</code>)</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">ThemeLayout</td>
+          <td class="col-ours"><b>8 sub-structs</b>: tabBar, navBar, spacing, cornerRadii (13 свойств + chatBubbleCorners), feedCell, profileHeader, sizes (5 св-в), gaps (7 св-в), padding (4 св-ва)</td>
+          <td class="col-theirs"><b>5 sub-structs</b>: tabBar, navBar, spacing, cornerRadii (3 св-ва: small/medium/large), feedCell, profileHeader. <span class="verdict v-conflict">Нет</span> sizes, gaps, padding, chatBubbleCorners</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">ThemeEffects</td>
+          <td class="col-ours">4 shadow-уровня, accentGlow, tabBarBlur, <code>headingGradientEnabled</code>, <code>GlassEffect</code> (cardGlass, inputBarGlass)</td>
+          <td class="col-theirs">Те же shadows и glow (добавлены позже). Glass и headingGradient добавлены в последних коммитах — идентичная структура</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">ThemeFonts</td>
+          <td class="col-ours">12: heading*, body*, caption, buttonFont, tabBarFont, inputFont, <code>statsLabel</code>, <code>eventButton</code>, <code>eventTitle</code>, <code>eventDetail</code></td>
+          <td class="col-theirs">8: heading*, body*, caption, buttonFont, tabBarFont, inputFont. <span class="verdict v-conflict">Нет</span> stats/event специфичных</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">CornerRadii</td>
+          <td class="col-ours">13 свойств: small, medium, large, stories, pill, chatInput, eventButton, eventCard, photoGrid, tabbarTop, chatBubbleSent/ReceivedCorners</td>
+          <td class="col-theirs">3 свойства: small, medium, large. <span class="verdict v-conflict">Нет</span> специфичных для stories, chat, events</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Вердикт</td>
+          <td colspan="2" style="text-align:center"><span class="verdict v-ours">Наши токены гранулярнее</span> — больше Figma-специфичных значений. У Таймураза больше color-токенов для chat.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 4: UI Migration -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>📱</span> Миграция UI-компонентов</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <table class="cmp-table">
+      <thead><tr><th class="col-aspect">Компонент</th><th class="col-branch col-ours">Мы</th><th class="col-branch col-theirs">Таймураз</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="col-aspect">Файлов затронуто</td>
+          <td class="col-ours">~40 файлов, фокус на Figma-точности</td>
+          <td class="col-theirs"><b>247 файлов</b>, массовая миграция hardcoded → token</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Tab Bar</td>
+          <td class="col-ours">Расширенный layout (ThemeLayout.tabBar), hex-pattern, gradient overlays</td>
+          <td class="col-theirs">Полный rewrite CustomTabBarViewController: Combine, gradient bg, user avatar tab, no text labels</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">AvatarView</td>
+          <td class="col-ours">Gradient locations fix, dominant color border, hexagon shape через ThemeLayout</td>
+          <td class="col-theirs">Полный rewrite: hexagon path, 8pt corners, <code>BorderStatus</code> enum, dominant color extraction</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">StoriesLineView</td>
+          <td class="col-ours">Без изменений (фокус на других экранах)</td>
+          <td class="col-theirs"><b>Полный rewrite</b> как reference implementation: <code>StoriesLayout</code> enum, Combine subscription, все цвета через токены</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Chat / Messenger</td>
+          <td class="col-ours">Glass blur, gradient overlay (Task 5), chatContainerHeight token, bubbleCorners</td>
+          <td class="col-theirs">29 файлов мигрировано: <code>sentMessageText/receivedMessageText</code> токены, MediaAttachment sheet</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Auth screens</td>
+          <td class="col-ours">Не затронуты</td>
+          <td class="col-theirs">FirstScreen, Initial, Entry, SignUp, Password — все мигрированы на gradient tokens</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">AI Chat</td>
+          <td class="col-ours">Не затронуты</td>
+          <td class="col-theirs">6 файлов: VC, cells, balance, input bar — все на theme tokens</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Event cards</td>
+          <td class="col-ours"><b>Glass effect</b> (Task 4), border tokens, background alpha</td>
+          <td class="col-theirs">AnnounceViewController мигрирован, но без glass effect</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Settings</td>
+          <td class="col-ours">Не затронуты</td>
+          <td class="col-theirs">Account, CloseFriends, FAQ, SavedContent — мигрированы</td>
+        </tr>
+        <tr>
+          <td class="col-aspect">Blur styles</td>
+          <td class="col-ours">2 файла: DraggableText, MessageActions → <code>tabBarBlurStyle</code></td>
+          <td class="col-theirs">QrReader, MessageActions — аналогично мигрированы</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-card">
+      <h4>📈 Масштаб миграции</h4>
+      <ul>
+        <li><b>Таймураз:</b> 247 файлов, широкая миграция hardcoded UIColor(red:) → theme tokens по всему приложению. Охватил auth, AI chat, settings, profile, messenger.</li>
+        <li><b>Мы:</b> ~40 файлов, глубокая работа над Figma-точностью — gradient locations, glass effects, layout tokens (sizes, gaps, padding, chatBubbleCorners), pixel-perfect значения.</li>
+        <li><b>Пересечение:</b> ~10 файлов изменены в обеих ветках (ThemeEffects, ThemeColors, themes, MessengerVC, UIButton, AvatarView, MessageActions)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 5: Key Differences -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header open" onclick="toggle(this)">
+    <div class="comp-title"><span>🔍</span> Ключевые различия в подходе</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="comp-body open">
+    <table class="cmp-table">
+      <thead><tr><th class="col-aspect">Различие</th><th class="col-branch col-ours">Наш подход</th><th class="col-branch col-theirs">Подход Таймураза</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="col-aspect"><b>1. Философия</b></td>
+          <td class="col-ours"><b>Figma-first:</b> каждый токен из Figma Variables, pixel-perfect alignment, аудит каждого элемента</td>
+          <td class="col-theirs"><b>Coverage-first:</b> максимальное покрытие кодовой базы, замена hardcoded → tokens, новые творческие темы</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>2. Темы</b></td>
+          <td class="col-ours">3 темы (NewDark, NewLight, Default) — <b>Figma-источник</b></td>
+          <td class="col-theirs">5 тем (DarkNeon, Default, Minimalist, Retro, Nature) — <b>собственный дизайн</b>, удалены NewDark/NewLight</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>3. Layout-токены</b></td>
+          <td class="col-ours">Максимальная гранулярность: 13 cornerRadii, chatBubbleCorners, sizes, gaps, padding</td>
+          <td class="col-theirs">Базовые: 3 cornerRadii (small/medium/large), без sizes/gaps/padding</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>4. Эффекты</b></td>
+          <td class="col-ours">GlassEffect → применён к event cards, gradient blur в chat, gradient locations</td>
+          <td class="col-theirs">GlassEffect определён, но <b>не применён</b> к UI-компонентам</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>5. Dead code</b></td>
+          <td class="col-ours">Не трогали — фокус на добавлении</td>
+          <td class="col-theirs">Удалён dead code: SBP flow, inBlackList, Instagram icon, FigmaIcons ассеты</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>6. Документация</b></td>
+          <td class="col-ours">Design tracker (GitHub Pages), audit reports, layout tracker</td>
+          <td class="col-theirs">TEST_CHECKLIST.md — 81 строка проверок, MIGRATION_QUESTIONS.md</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>7. CI/CD</b></td>
+          <td class="col-ours">Без изменений</td>
+          <td class="col-theirs">GitHub Actions: SPM cache, TestFlight deploy, build numbers</td>
+        </tr>
+        <tr>
+          <td class="col-aspect"><b>8. Media Editor</b></td>
+          <td class="col-ours">Без изменений</td>
+          <td class="col-theirs">Полный photo/video editor (фильтры, text overlays, undo, rotation)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 6: Conflicts -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>⚡</span> Конфликты при merge</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <table class="cmp-table">
+      <thead><tr><th style="width:30%">Файл / Область</th><th style="width:15%">Тип</th><th style="width:55%">Описание</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>ThemeEffects.swift</code></td>
+          <td><span class="verdict v-conflict">Конфликт</span></td>
+          <td>У нас расширен (GlassEffect struct, headingGradientEnabled, cardGlass/inputBarGlass). Таймураз тоже добавил, но позже и возможно с другой структурой. Нужен ручной merge.</td>
+        </tr>
+        <tr>
+          <td><code>ThemeColors.swift</code></td>
+          <td><span class="verdict v-merge">Merge</span></td>
+          <td>Разные новые токены: мы добавили event/chat-специфичные, Таймураз — sentMessageText, hashtagColor, switchOn/Off. Нужно объединить оба набора.</td>
+        </tr>
+        <tr>
+          <td><code>NewDarkTheme.swift</code><br><code>NewLightTheme.swift</code></td>
+          <td><span class="verdict v-conflict">Удалены!</span></td>
+          <td>Таймураз удалил обе темы. У нас — это основа. <b>Критический конфликт.</b> Решение: восстановить наши темы + интегрировать его новые 4 темы.</td>
+        </tr>
+        <tr>
+          <td><code>DefaultTheme.swift</code></td>
+          <td><span class="verdict v-conflict">Конфликт</span></td>
+          <td>У нас: legacy theme с полными layout/effects. У Таймураза: один из 5 bundled themes, совершенно другая структура.</td>
+        </tr>
+        <tr>
+          <td><code>ThemeLayout.swift</code></td>
+          <td><span class="verdict v-ours">Взять наш</span></td>
+          <td>Наш значительно богаче (sizes, gaps, padding, chatBubbleCorners). Его версия — подмножество нашей.</td>
+        </tr>
+        <tr>
+          <td><code>ThemeManager.swift</code></td>
+          <td><span class="verdict v-merge">Merge</span></td>
+          <td>Таймураз упростил (убрал лишнее). Нужно добавить поддержку 8 тем (3 наших + 5 его).</td>
+        </tr>
+        <tr>
+          <td><code>MessengerViewController.swift</code></td>
+          <td><span class="verdict v-merge">Merge</span></td>
+          <td>Мы: gradient blur + chatContainerHeight token. Он: миграция hardcoded цветов. Разные участки кода — merge несложный.</td>
+        </tr>
+        <tr>
+          <td><code>UIButton.swift</code></td>
+          <td><span class="verdict v-merge">Merge</span></td>
+          <td>Мы: gradient locations. Он: GradientButton class, упрощённый applyGradient. Нужен ручной merge.</td>
+        </tr>
+        <tr>
+          <td><code>AvatarView.swift</code></td>
+          <td><span class="verdict v-merge">Merge</span></td>
+          <td>Мы: gradient locations. Он: полный rewrite (hexagon, BorderStatus). Его rewrite масштабнее — взять его + добавить наши locations.</td>
+        </tr>
+        <tr>
+          <td><code>CustomTabBarViewController.swift</code></td>
+          <td><span class="verdict v-theirs">Взять его</span></td>
+          <td>Его: полный rewrite с Combine. Наш: без изменений. Взять его версию.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 7: What to adopt -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header open" onclick="toggle(this)">
+    <div class="comp-title"><span>✅</span> Что взять из ветки Таймураза</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="comp-body open">
+    <ol class="rec-list">
+      <li>
+        <div class="rec-num">1</div>
+        <div class="rec-text"><b>sentMessageText / receivedMessageText токены</b> — у нас нет отдельных color-токенов для текста в пузырях. Таймураз добавил их во все 5 тем. Нужно добавить в ThemeColors и наши 3 темы.</div>
+      </li>
+      <li>
+        <div class="rec-num">2</div>
+        <div class="rec-text"><b>hashtagColor, switchOn/Off, subtleBorder</b> — полезные токены, которых у нас нет. Добавить в ThemeColors.</div>
+      </li>
+      <li>
+        <div class="rec-num">3</div>
+        <div class="rec-text"><b>StoriesLineView rewrite</b> — reference implementation Combine-подписки. У нас Stories не тронуты. Взять его rewrite и адаптировать под наши layout-токены.</div>
+      </li>
+      <li>
+        <div class="rec-num">4</div>
+        <div class="rec-text"><b>29 файлов hardcoded → tokens миграция</b> — Auth, AI Chat, Settings, Profile. Массовая замена UIColor(red:) на semantic colors. Основной объём работы уже сделан — cherry-pick.</div>
+      </li>
+      <li>
+        <div class="rec-num">5</div>
+        <div class="rec-text"><b>TEST_CHECKLIST.md</b> — 81 строка конкретных проверок по темам. Использовать как baseline для QA.</div>
+      </li>
+      <li>
+        <div class="rec-num">6</div>
+        <div class="rec-text"><b>Dead code cleanup</b> — удалённые SBP flow, inBlackList, Instagram icon. Чистый код — меньше путаницы.</div>
+      </li>
+      <li>
+        <div class="rec-num">7</div>
+        <div class="rec-text"><b>DarkNeonTheme как дополнительная тема</b> — интересная неоновая палитра. Добавить как 4-ю тему (не вместо наших NewDark/NewLight).</div>
+      </li>
+      <li>
+        <div class="rec-num">8</div>
+        <div class="rec-text"><b>CI/CD: SPM cache + build numbers</b> — GitHub Actions оптимизации. Независимая инфра-работа, можно взять as-is.</div>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 8: What NOT to adopt -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>🚫</span> Что НЕ брать / адаптировать</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <ol class="rec-list">
+      <li>
+        <div class="rec-num" style="background:var(--red)">1</div>
+        <div class="rec-text"><b>Удаление NewDarkTheme / NewLightTheme</b> — это наш Figma reference. Все pixel-perfect значения завязаны на эти темы. Восстанавливаем.</div>
+      </li>
+      <li>
+        <div class="rec-num" style="background:var(--red)">2</div>
+        <div class="rec-text"><b>Упрощённый ThemeLayout (3 cornerRadii)</b> — наша версия с 13 свойствами + chatBubbleCorners точнее отражает Figma. Берём нашу.</div>
+      </li>
+      <li>
+        <div class="rec-num" style="background:var(--red)">3</div>
+        <div class="rec-text"><b>Minimalist / Retro / Nature темы as-is</b> — не имеют Figma-основы, шрифтовые вариации ломают layout. Если добавлять — нужно выровнять с нашей token-структурой (заполнить sizes, gaps, padding, cornerRadii).</div>
+      </li>
+      <li>
+        <div class="rec-num" style="background:var(--red)">4</div>
+        <div class="rec-text"><b>Удаление FigmaIcons ассетов</b> — мы используем их в наших темах. Нельзя удалять без ревью каждой иконки.</div>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 9: Merge Plan -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>🔀</span> Рекомендуемый план merge</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <div class="merge-step">
+      <div class="step-icon step-take">1</div>
+      <div class="step-body">
+        <h4>Базовая ветка: наша <code>pixel-perfect-tokens</code></h4>
+        <p>Наша архитектура token-системы полнее (layout, effects, sizes). Она остаётся основой.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-take">2</div>
+      <div class="step-body">
+        <h4>Cherry-pick: новые ThemeColors токены (commit <code>153973d</code> + <code>c8f7745</code>)</h4>
+        <p>Добавить sentMessageText, receivedMessageText, hashtagColor, switchOn/Off, subtleBorder в ThemeColors и все 3 наших темы.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-take">3</div>
+      <div class="step-body">
+        <h4>Cherry-pick: массовая миграция hardcoded цветов (commit <code>889f32d</code>)</h4>
+        <p>29 файлов: Auth, AI Chat, Settings, Profile — заменены UIColor(red:) → tokens. Осторожно: конфликты в ~5 файлах.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-adapt">4</div>
+      <div class="step-body">
+        <h4>Адаптировать: StoriesLineView rewrite (commit <code>155a5ad</code>)</h4>
+        <p>Взять Combine-подписку, но переписать layout constants на наши ThemeLayout.sizes/gaps токены.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-adapt">5</div>
+      <div class="step-body">
+        <h4>Адаптировать: DarkNeonTheme как 4-ю тему</h4>
+        <p>Добавить DarkNeonTheme в bundledThemes. Нужно заполнить все наши токены (sizes, gaps, padding, chatBubbleCorners, effects).</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-take">6</div>
+      <div class="step-body">
+        <h4>Cherry-pick: dead code cleanup (commit <code>ccd6d6c</code>)</h4>
+        <p>Удаление SBP flow, inBlackList, Instagram icon. Безопасная чистка, конфликтов не ожидается.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-skip">7</div>
+      <div class="step-body">
+        <h4>Отложить: Minimalist / Retro / Nature темы</h4>
+        <p>Нужна работа по наполнению нашей token-структурой. Отдельная задача после merge.</p>
+      </div>
+    </div>
+    <div class="merge-step">
+      <div class="step-icon step-take">8</div>
+      <div class="step-body">
+        <h4>Взять: TEST_CHECKLIST.md</h4>
+        <p>Расширить нашими проверками (glass effects, gradient locations, layout tokens). Использовать для финального QA.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- SECTION 10: Score -->
+<!-- ============================================ -->
+<div class="comp-section">
+  <div class="comp-header" onclick="toggle(this)">
+    <div class="comp-title"><span>📋</span> Итоговая оценка</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="comp-body">
+    <table class="cmp-table">
+      <thead><tr><th style="width:30%">Критерий</th><th style="width:10%">Вес</th><th style="width:30%">pixel-perfect-tokens</th><th style="width:30%">design-tokens-migration</th></tr></thead>
+      <tbody>
+        <tr><td>Figma-точность</td><td>30%</td><td><b style="color:var(--green)">9/10</b> — pixel-perfect</td><td>5/10 — свои палитры</td></tr>
+        <tr><td>Покрытие кодовой базы</td><td>25%</td><td>4/10 — ~40 файлов</td><td><b style="color:var(--green)">9/10</b> — 247 файлов</td></tr>
+        <tr><td>Token-гранулярность</td><td>20%</td><td><b style="color:var(--green)">9/10</b> — 8 sub-structs</td><td>5/10 — базовые</td></tr>
+        <tr><td>Эффекты (glass, blur, shadow)</td><td>10%</td><td><b style="color:var(--green)">8/10</b> — применены к UI</td><td>5/10 — определены, не применены</td></tr>
+        <tr><td>Тестируемость / QA</td><td>10%</td><td>6/10 — design tracker</td><td><b style="color:var(--green)">8/10</b> — TEST_CHECKLIST</td></tr>
+        <tr><td>Чистота кода</td><td>5%</td><td>7/10</td><td><b style="color:var(--green)">8/10</b> — dead code убран</td></tr>
+        <tr style="border-top:2px solid var(--border)">
+          <td><b>ИТОГО (взвешенное)</b></td>
+          <td></td>
+          <td><b style="color:var(--accent-light);font-size:18px">7.1</b></td>
+          <td><b style="color:var(--teal);font-size:18px">6.7</b></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight-card" style="margin-top:20px">
+      <h4>💡 Вывод</h4>
+      <p>Ветки <b>комплементарны</b>: наша даёт Figma-точность и token-гранулярность, ветка Таймураза — широкое покрытие кодовой базы и новые палитры. Оптимальный результат — merge обеих, где наша архитектура + его миграция дадут ~90% покрытия с pixel-perfect значениями.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+function toggle(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+// Auto-open first "Key Differences" section
+</script>
+</body>
+</html>
