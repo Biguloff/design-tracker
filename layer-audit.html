@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Me — Layer & Blur Audit</title>
+<style>
+:root{--bg:#08090B;--bg2:#0C0D0F;--bg3:#141517;--accent:#7D4FFF;--accent-light:#B298FF;--green:#34C759;--yellow:#FFB800;--red:#FF3B30;--orange:#FF9500;--text:#FFF;--text2:#8D93A1;--border:#29292E}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,-apple-system,sans-serif;line-height:1.6}
+a{color:var(--accent-light);text-decoration:none}a:hover{text-decoration:underline}
+.container{max-width:1200px;margin:0 auto;padding:24px 16px}
+.back-link{display:inline-block;margin-bottom:16px;font-size:13px}
+.header{text-align:center;padding:40px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px}
+.header h1{font-size:28px;font-weight:700;background:linear-gradient(81.16deg,#FFF 37.23%,rgba(255,255,255,0.5) 81.25%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header p{color:var(--text2);margin-top:8px;font-size:14px}
+
+.summary{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;min-width:120px}
+.sum-num{font-size:28px;font-weight:700}.sum-label{font-size:12px;color:var(--text2)}
+
+.section{background:var(--bg2);border-radius:20px;margin-bottom:16px;border:1px solid var(--border);overflow:hidden}
+.section-header{padding:16px 24px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.section-header:hover{background:var(--bg3)}
+.section-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
+.chevron{transition:transform .3s;font-size:18px;color:var(--text2)}
+.section-header.open .chevron{transform:rotate(90deg)}
+.section-body{padding:0 24px 20px;display:none}.section-body.open{display:block}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:600}
+.b-ok{background:rgba(52,199,89,0.12);color:var(--green)}
+.b-warn{background:rgba(255,184,0,0.15);color:var(--yellow)}
+.b-crit{background:rgba(255,59,48,0.15);color:var(--red)}
+.b-info{background:rgba(125,79,255,0.1);color:var(--accent-light)}
+
+.issue{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin:10px 0}
+.issue h4{font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.issue p,.issue ul{font-size:13px;color:var(--text2);line-height:1.7}.issue ul{padding-left:18px}.issue li{margin:3px 0}
+code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px;font-family:'SF Mono',monospace;color:var(--accent-light)}
+.code{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'SF Mono',monospace;font-size:11px;line-height:1.6;overflow-x:auto;margin:8px 0;white-space:pre;color:var(--text2)}
+.file-ref{font-family:'SF Mono',monospace;font-size:11px;color:#30B0C7;background:rgba(48,176,199,0.1);padding:2px 8px;border-radius:4px}
+
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+tr:last-child td{border-bottom:none}
+
+.layers{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:8px 0;font-family:'SF Mono',monospace;font-size:11px;line-height:2;color:var(--text2)}
+.layers .l-blur{color:#30B0C7}.layers .l-grad{color:var(--accent-light)}.layers .l-solid{color:var(--yellow)}.layers .l-ok{color:var(--green)}.layers .l-bad{color:var(--red)}
+
+@media(max-width:768px){table{font-size:12px}.layers{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back-link" href="index.html">&larr; Design Tracker</a>
+
+<div class="header">
+  <h1>Layer & Blur Audit</h1>
+  <p>Послойная проверка всех blur, gradient и transparency эффектов по ADR-005</p>
+</div>
+
+<div class="summary">
+  <div class="sum-card"><div class="sum-num" style="color:var(--green)">7</div><div class="sum-label">OK компонентов</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--red)">1</div><div class="sum-label">Critical баг</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--yellow)">3</div><div class="sum-label">Warnings</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--orange)">31</div><div class="sum-label">SVG с проблемами</div></div>
+</div>
+
+<!-- ===== CRITICAL ===== -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-crit">CRITICAL</span> CustomPresentController — blur невидим</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <div class="issue">
+      <h4><span class="badge b-crit">BUG</span> <span class="file-ref">CustomPresentController.swift:41</span></h4>
+      <p>Blur анимируется к <code>alpha = 0.0</code> вместо <code>1.0</code>. Модальные окна показываются без frosted glass — прозрачный фон.</p>
+<div class="code"><span style="color:var(--red)">// СЕЙЧАС (сломано):</span>
+self.presentedViewController.transitionCoordinator?.animate(alongsideTransition: { _ in
+    self.blurEffectView.alpha = 0.0  // ← Остаётся невидимым!
+})
+
+<span style="color:var(--green)">// НУЖНО:</span>
+    self.blurEffectView.alpha = 1.0  // Анимировать к видимому</div>
+      <p><b>Влияние:</b> Все модальные экраны через CustomPresentController показываются без размытого фона.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB BAR ===== -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> Tab Bar — нижняя панель</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <div class="layers">
+<span class="l-ok">tabBar</span> (isTranslucent=true, backgroundColor=.clear)
+├── <span class="l-solid">tabBarShapeLayer</span> (CAShapeLayer, fillColor=.clear) ← прозрачный
+├── <span class="l-blur">UIVisualEffectView</span> (subview at:0) ← BACKDROP BLUR ✓
+├── <span class="l-grad">tabBarGradientView</span> (subview at:1) ← transparent→opaque gradient ✓
+│   ├── gradientLayer0: background@0 → background@1
+│   └── gradientLayer1: идентичная копия (Figma дизайн)
+├── [tab bar items — иконки]
+├── middleButton (zPosition=max)
+└── userImageView (аватар)
+    </div>
+    <p style="font-size:13px;color:var(--text2)">Z-порядок корректный. Blur на дне, gradient над ним, иконки сверху. Контент просвечивает.</p>
+
+    <div class="issue">
+      <h4><span class="badge b-warn">WARN</span> ThemeManager vs CustomTabBarVC конфликт</h4>
+      <p><code>ThemeManager.applyGlobalAppearance()</code> ставит <code>backgroundEffect = UIBlurEffect(.dark)</code> + <code>backgroundColor@0.85</code> в global proxy.<br>
+      <code>CustomTabBarViewController.setTabBarAppearance()</code> перезаписывает на <code>transparent + .clear</code>.<br>
+      Работает корректно (instance override побеждает), но запутанно. Нужен комментарий в ThemeManager.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CHAT INPUT ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> Chat Input Panel — MessengerVC</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="layers">
+<span class="l-ok">writePanelView</span> (backgroundColor=.clear)
+├── <span class="l-blur">UIVisualEffectView</span> (at:0) ← BACKDROP BLUR ✓
+├── <span class="l-grad">tintOverlay</span> (aboveSubview: blurView)
+│   └── CAGradientLayer: background@0.0(top) → background@0.85(bottom)
+└── [text input, send button, etc.]
+    </div>
+    <p style="font-size:13px;color:var(--text2)">Корректно. Blur внизу, gradient tint над ним, UI элементы сверху.</p>
+  </div>
+</div>
+
+<!-- ===== EVENT CARDS ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> Event Cards Glass — AnnounceView</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="layers">
+<span class="l-ok">topView / middleView</span> (backgroundColor=cardBg@glass.backgroundAlpha)
+├── <span class="l-blur">UIVisualEffectView</span> (at:0, tag=ViewTag.glassBlur) ← GLASS BLUR ✓
+└── [labels, buttons — контент карточки]
+    </div>
+    <p style="font-size:13px;color:var(--text2)">Glass корректный. NewDark: .dark blur + 5% alpha. NewLight: .systemUltraThinMaterialLight + 30%. Default: без blur.</p>
+    <div class="issue">
+      <h4><span class="badge b-warn">WARN</span> Blur пересоздаётся при каждом cell reuse</h4>
+      <p><code>applyThemeColors()</code> удаляет и создаёт новый <code>UIVisualEffectView</code> при каждом <code>configure()</code>. При быстром скролле 100+ ячеек — лишняя нагрузка. Рекомендация: кешировать и обновлять <code>effect</code>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NAV BAR ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> Navigation Bar — QRNavigationView</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:13px;color:var(--text2)">Intentionally opaque. <code>configureWithOpaqueBackground()</code> + solid <code>backgroundColor</code>. Нет blur по дизайну. Никаких конфликтов.</p>
+  </div>
+</div>
+
+<!-- ===== STORIES ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> Stories Container — StoriesLineView</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:13px;color:var(--text2)">Solid background <code>.storiesCardBackground</code> + border <code>CAShapeLayer</code>. Нет blur по дизайну. Z-порядок бордера корректен.</p>
+  </div>
+</div>
+
+<!-- ===== QR TAB SWITCHER ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> QR Tab Switcher — MyQrViewController</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <p style="font-size:13px;color:var(--text2)">Active tab: gradient at sublayer 0, white border above. Inactive tab: semi-transparent bg. Gradient cleanup при layout корректен (фильтр по name + remove).</p>
+  </div>
+</div>
+
+<!-- ===== AI ONBOARDING ===== -->
+<div class="section">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-ok">OK</span> AI Onboarding — AIOnboardingVC</div>
+    <span class="chevron">›</span>
+  </div>
+  <div class="section-body">
+    <div class="layers">
+<span class="l-ok">view</span>
+├── <span class="l-blur">blurView</span> (UIVisualEffectView, full screen) ← BLUR ✓
+├── <span class="l-grad">overlayView</span> (background@0.5) ← dimming overlay
+└── [robotImageView, contentStack]
+    </div>
+    <p style="font-size:13px;color:var(--text2)">Корректно. Blur → overlay → контент. Theme-aware blur style.</p>
+  </div>
+</div>
+
+<!-- ===== SVG AUDIT ===== -->
+<div class="section">
+  <div class="section-header open" onclick="toggle(this)">
+    <div class="section-title"><span class="badge b-warn">31 SVG</span> SVG с неподдерживаемыми фичами iOS</div>
+    <span class="chevron" style="transform:rotate(90deg)">›</span>
+  </div>
+  <div class="section-body open">
+    <table>
+      <thead><tr><th>Категория</th><th>Кол-во</th><th>Проблема</th><th>Влияние</th></tr></thead>
+      <tbody>
+        <tr><td><code>backdrop-filter</code> + <code>foreignObject</code></td><td><span class="badge b-crit">3</span></td><td>ai_icon.svg, ai_icon_light.svg, Frame&nbsp;2087324902.svg</td><td>Blur фон кнопки не рендерится — плоский круг</td></tr>
+        <tr><td><code>&lt;filter&gt;</code> + <code>feGaussianBlur</code></td><td><span class="badge b-warn">22</span></td><td>Chat bubble shadows (4), декоративные элементы (4), Story UI (4), прочие (10)</td><td>Drop shadows не видны — элементы плоские без глубины</td></tr>
+        <tr><td><code>&lt;mask&gt;</code></td><td><span class="badge b-info">6</span></td><td>profilePlaceholder, profile_tab, Facebook иконки (3), alert</td><td>Частичная поддержка — простые маски работают, сложные нет</td></tr>
+      </tbody>
+    </table>
+    <div class="issue">
+      <h4>Что iOS НЕ рендерит из SVG</h4>
+      <ul>
+        <li><code>&lt;foreignObject&gt;</code> — полностью игнорируется</li>
+        <li>CSS <code>backdrop-filter: blur()</code> — игнорируется</li>
+        <li>SVG <code>&lt;filter&gt;</code> / <code>&lt;feGaussianBlur&gt;</code> — игнорируется</li>
+        <li><code>&lt;mask&gt;</code> — частичная поддержка (простые OK, сложные нет)</li>
+        <li>CSS properties через <code>style=""</code> — частичная поддержка</li>
+      </ul>
+      <p>Рекомендация: для теней использовать <code>CALayer.shadow*</code> или <code>ThemeEffects.shadowLevel*</code>. Для blur — <code>UIVisualEffectView</code>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUMMARY TABLE ===== -->
+<div style="margin-top:24px;padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:20px">
+  <h3 style="font-size:15px;margin-bottom:16px">Сводная таблица</h3>
+  <table>
+    <thead><tr><th>Компонент</th><th>Файл</th><th>Blur</th><th>Z-order</th><th>Статус</th></tr></thead>
+    <tbody>
+      <tr><td>Tab Bar</td><td><code>CustomTabBarVC</code></td><td>UIVisualEffectView inside tabBar</td><td>blur → gradient → icons</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>Chat Input</td><td><code>MessengerVC</code></td><td>UIVisualEffectView + gradient tint</td><td>blur → gradient → UI</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>Event Cards</td><td><code>AnnounceView</code></td><td>GlassEffect token</td><td>blur → content</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>Nav Bar</td><td><code>QRNavigationView</code></td><td>Нет (opaque by design)</td><td>—</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>Modal</td><td><code>CustomPresentController</code></td><td>UIVisualEffectView</td><td>blur → presented VC</td><td><span class="badge b-crit">BUG: alpha=0</span></td></tr>
+      <tr><td>Stories</td><td><code>StoriesLineView</code></td><td>Нет (solid by design)</td><td>—</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>QR Switcher</td><td><code>MyQrVC</code></td><td>Нет (gradient only)</td><td>gradient → border</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>AI Onboarding</td><td><code>AIOnboardingVC</code></td><td>UIVisualEffectView</td><td>blur → overlay → content</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>Theme BG</td><td><code>ThemeBackgroundView</code></td><td>Нет (decorative glow)</td><td>—</td><td><span class="badge b-ok">OK</span></td></tr>
+      <tr><td>SVG Assets</td><td>394 файла</td><td>31 с unsupported features</td><td>—</td><td><span class="badge b-warn">22 без теней</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+<script>function toggle(h){h.classList.toggle('open');h.nextElementSibling.classList.toggle('open')}</script>
+</body>
+</html>
