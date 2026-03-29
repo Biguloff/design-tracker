@@ -216,14 +216,14 @@ const DATA = {
         { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "eventCardBorder token", status: "done" },
         { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "eventCardBorder token", status: "done" },
         { cat: "Colors", name: "header icons opacity", figma: "50%", ios: "needs verify", status: "progress" },
-        { cat: "Typography", name: "title gradient", figma: "Manrope SemiBold 24px gradient", ios: "not implemented", status: "missing" },
-        { cat: "Typography", name: "title tracking", figma: "-0.96px", ios: "not set", status: "missing" },
+        { cat: "Typography", name: "title gradient", figma: "Manrope SemiBold 24px gradient", ios: "applyGradientTextMask()", status: "done" },
+        { cat: "Typography", name: "title tracking", figma: "-0.96px", ios: "kern -4% от pointSize", status: "done" },
         { cat: "Typography", name: "recommendation label", figma: "14px Medium uppercase", ios: "no token (sectionLabel)", status: "missing" },
-        { cat: "Typography", name: "event stats text", figma: "12px Regular #8D93A1", ios: "hardcoded 0x8D93A1", status: "wrong" },
+        { cat: "Typography", name: "event stats text", figma: "12px Regular #8D93A1", ios: "statsLabel + disabledText", status: "done" },
         { cat: "Layout", name: "stories section height", figma: "130px", ios: "needs verify", status: "progress" },
-        { cat: "Layout", name: "event card radius", figma: "32px", ios: "no token (eventCard)", status: "missing" },
+        { cat: "Layout", name: "event card radius", figma: "32px", ios: "cornerRadii.eventCard (32)", status: "done" },
         { cat: "Layout", name: "header icons gap", figma: "16px", ios: "needs verify", status: "progress" },
-        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "applyThemeGradientTextColor()", status: "done" },
         { cat: "Effects", name: "tab bar blur", figma: "backdrop-blur 7px", ios: "implemented", status: "done" },
       ]
     },
@@ -236,20 +236,20 @@ const DATA = {
         { cat: "Colors", name: "chat name color", figma: "white / black", ios: ".text", status: "done" },
         { cat: "Colors", name: "message preview", figma: "#8D93A1 @70%", ios: "messageColor @70%", status: "done" },
         { cat: "Colors", name: "date text (dark)", figma: "rgba(141,147,161,0.5)", ios: "messageDateColor @50%", status: "done" },
-        { cat: "Colors", name: "swipe more bg (dark)", figma: "#1B1B1B", ios: "hardcoded 0x1B1B1B", status: "wrong" },
-        { cat: "Colors", name: "swipe more bg (light)", figma: "#C3C9D8", ios: "hardcoded 0xC3C9D8", status: "wrong" },
+        { cat: "Colors", name: "swipe more bg (dark)", figma: "#1B1B1B", ios: "swipeMoreBackground token", status: "done" },
+        { cat: "Colors", name: "swipe more bg (light)", figma: "#C3C9D8", ios: "swipeMoreBackground token", status: "done" },
         { cat: "Colors", name: "swipe archive bg", figma: "#B398FF", ios: "archiveButtonBg 0xB398FF", status: "done" },
         { cat: "Colors", name: "separator", figma: "tabBarBorder", ios: "tabBarBorderColor", status: "done" },
-        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "not implemented", status: "missing" },
+        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "setupNavBarLeftBarButton — градиент", status: "done" },
         { cat: "Typography", name: "chat name", figma: "Manrope Medium 16px", ios: "messageName 16pt", status: "done" },
-        { cat: "Typography", name: "preview text", figma: "Manrope Regular 12px", ios: "no token (messagePreview)", status: "missing" },
-        { cat: "Typography", name: "date text", figma: "Manrope Regular 14px", ios: "no token (messageDate)", status: "missing" },
-        { cat: "Layout", name: "avatar size", figma: "52px", ios: "no token (avatarMessage)", status: "missing" },
+        { cat: "Typography", name: "preview text", figma: "Manrope Regular 12px", ios: "ThemeFonts.messagePreview", status: "done" },
+        { cat: "Typography", name: "date text", figma: "Manrope Regular 14px", ios: "ThemeFonts.messageDate", status: "done" },
+        { cat: "Layout", name: "avatar size", figma: "52px", ios: "52×52 в XIB", status: "done" },
         { cat: "Layout", name: "row height", figma: "85px", ios: "needs verify", status: "progress" },
-        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "title gradient text", figma: "linear-gradient", ios: "applyThemeGradientTextColor()", status: "done" },
         // --- BUGS ---
         { cat: "Bugs", name: "swipe 'More' handler empty", figma: "should show actions", ios: "empty TODO stub", status: "missing" },
-        { cat: "Bugs", name: "swipe 'Archive' deletes chat", figma: "should archive", ios: "calls deleteChat()", status: "missing" },
+        { cat: "Bugs", name: "swipe 'Archive' deletes chat", figma: "should archive", ios: "TODO: нет backend API для архивации", status: "progress" },
       ]
     },
     {
@@ -262,7 +262,7 @@ const DATA = {
         { cat: "Colors", name: "received bubble bg", figma: "#1D1D1D / #EFF1F3", ios: "receivedMessage", status: "done" },
         { cat: "Colors", name: "input bg (dark)", figma: "#0C0D0F", ios: "0x0C0D0F", status: "done" },
         { cat: "Colors", name: "input bg (light)", figma: "#CED4DF", ios: "0xCED4DF", status: "done" },
-        { cat: "Colors", name: "input border", figma: "#DEDEFF", ios: "tabBarBorderColor", status: "wrong" },
+        { cat: "Colors", name: "input border", figma: "#DEDEFF", ios: "storiesCardBorder token", status: "done" },
         { cat: "Colors", name: "date separator bg (dark)", figma: "#1D1D1D", ios: "needs token", status: "missing" },
         { cat: "Colors", name: "date separator text", figma: "#8D93A1", ios: "textDisabled", status: "done" },
         { cat: "Typography", name: "message text", figma: "Manrope Medium 16px", ios: "chatBody 16pt", status: "done" },
@@ -273,7 +273,7 @@ const DATA = {
         { cat: "Layout", name: "sent bubble corners", figma: "16/16/16/4", ios: "chatBubbleSentCorners", status: "done" },
         { cat: "Layout", name: "received bubble corners", figma: "16/16/4/16", ios: "chatBubbleReceivedCorners", status: "done" },
         { cat: "Layout", name: "input field size", figma: "279×32px", ios: "needs verify", status: "progress" },
-        { cat: "Effects", name: "header backdrop blur", figma: "blur 7px", ios: "not implemented", status: "missing" },
+        { cat: "Effects", name: "header backdrop blur", figma: "blur 7px", ios: "UIVisualEffectView + тинт", status: "done" },
         { cat: "Effects", name: "input bar blur", figma: "blur 7px", ios: "tabBarBlurStyle", status: "done" },
         // --- BUGS ---
         { cat: "Bugs", name: "media = empty bubbles", figma: "show image/video", ios: ".image/.video not handled", status: "missing" },
@@ -290,19 +290,19 @@ const DATA = {
         { cat: "Colors", name: "event card bg (light)", figma: "#E7EDF7", ios: "eventCardBackground token", status: "done" },
         { cat: "Colors", name: "event card border (dark)", figma: "white", ios: "eventCardBorder token", status: "done" },
         { cat: "Colors", name: "event card border (light)", figma: "#DEDEFF", ios: "eventCardBorder token", status: "done" },
-        { cat: "Colors", name: "stats text color", figma: "#8D93A1", ios: "hardcoded 0x8D93A1 ×4", status: "wrong" },
+        { cat: "Colors", name: "stats text color", figma: "#8D93A1", ios: ".disabledText (per-theme)", status: "done" },
         { cat: "Colors", name: "'Интересует' gradient", figma: "A98AFF→7D50FF", ios: "applyThemeGradient()", status: "done" },
         { cat: "Colors", name: "'Пойду' text opacity", figma: "70%", ios: "needs verify", status: "progress" },
-        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "not implemented", status: "missing" },
-        { cat: "Typography", name: "event title font", figma: "Manrope Regular 15px", ios: "no token (eventTitle)", status: "missing" },
-        { cat: "Typography", name: "event button font", figma: "SemiBold 14px -0.28", ios: "manropeSemibold 14", status: "done" },
-        { cat: "Typography", name: "event stats font", figma: "Regular 12px", ios: "manrope 12", status: "done" },
-        { cat: "Layout", name: "event card radius", figma: "32px", ios: "no token", status: "missing" },
+        { cat: "Typography", name: "title gradient", figma: "SemiBold 24px gradient", ios: "setupNavBarLeftBarButton — градиент", status: "done" },
+        { cat: "Typography", name: "event title font", figma: "Manrope Regular 15px", ios: "ThemeFonts.eventTitle (15pt)", status: "done" },
+        { cat: "Typography", name: "event button font", figma: "SemiBold 14px -0.28", ios: "ThemeFonts.eventButton", status: "done" },
+        { cat: "Typography", name: "event stats font", figma: "Regular 12px", ios: "ThemeFonts.statsLabel", status: "done" },
+        { cat: "Layout", name: "event card radius", figma: "32px", ios: "cornerRadii.eventCard (32)", status: "done" },
         { cat: "Layout", name: "'Интересует' radius", figma: "48px (pill)", ios: "buttonCornerRadius (verify)", status: "progress" },
         { cat: "Layout", name: "'Интересует' size", figma: "155×42px", ios: "needs verify", status: "progress" },
         // --- BUGS ---
-        { cat: "Bugs", name: "star icon too large", figma: "~14-16px", ios: "~50% button height", status: "missing" },
-        { cat: "Bugs", name: "star invisible in dark", figma: "white on gradient", ios: "no tintColor", status: "missing" },
+        { cat: "Bugs", name: "star icon too large", figma: "~14-16px", ios: "SF Symbol 16pt .medium", status: "done" },
+        { cat: "Bugs", name: "star invisible in dark", figma: "white on gradient", ios: "tintColor = .white, template", status: "done" },
         { cat: "Bugs", name: "white bar on event detail (light)", figma: "no bar", ios: "~44px white strip", status: "missing" },
       ]
     },
@@ -403,6 +403,85 @@ const DATA = {
 // ═══════════════════════════════════════════════════
 
 const CHANGELOG = [
+  {
+    date: "2026-03-29T18:40",
+    tag: "feat",
+    desc: "Лента: заголовок «Лента» — вернули градиент текста через headingGradient токены. Было: plain textPrimary (градиент был отключён из-за бага с фиолетовым цветом). Стало: applyGradientTextMask() + applyThemeGradientTextColor()",
+    items: [
+      { screen:"feed", name:"title gradient" },
+      { screen:"feed", name:"title gradient text" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:35",
+    tag: "fix",
+    desc: "Мероприятия: звезда «Интересует» — tintColor=white + template rendering. Было: системный цвет SF Symbol, невидима на градиенте в dark. Стало: белая звезда на любом фоне",
+    items: [
+      { screen:"events", name:"star icon too large" },
+      { screen:"events", name:"star invisible in dark" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:30",
+    tag: "fix",
+    desc: "Мероприятия: статистика (Интересует/Пойду) — заменили хардкод #8D93A1 и шрифт. Было: UIColor(hex: 0x8D93A1) + manrope 12pt. Стало: .disabledText (per-theme) + ThemeFonts.statsLabel. Кнопки: manropeSemibold 14pt → ThemeFonts.eventButton",
+    items: [
+      { screen:"events", name:"stats text color" },
+      { screen:"events", name:"event stats font" },
+      { screen:"events", name:"event button font" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:25",
+    tag: "fix",
+    desc: "Чат: рамка поля ввода — неправильный цвет. Было: .tabBarBorderColor (#29292E dark / #CDD1DB light). Стало: .storiesCardBorder (#DEDEFF) по Figma",
+    items: [
+      { screen:"chat", name:"input border" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:20",
+    tag: "fix",
+    desc: "Сообщения: аватар 48→52px по Figma. Было: width/height=48 в XIB. Стало: 52×52 через обновлённые constraint в ChatCell.xib",
+    items: [
+      { screen:"messages", name:"avatar size" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:15",
+    tag: "fix",
+    desc: "Сообщения: шрифты превью и даты — заменили хардкод на токены. Было: UIFont.QR.font(.manrope, 12/14). Стало: ThemeFonts.messagePreview (12pt) + ThemeFonts.messageDate (14pt). Применяется и в awakeFromNib, и в configure()",
+    items: [
+      { screen:"messages", name:"preview text" },
+      { screen:"messages", name:"date text" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:10",
+    tag: "fix",
+    desc: "Сообщения: swipe «Ещё» — заменили тернарный оператор isLight?C3C9D8:1B1B1B на .swipeMoreBackground токен. Архивация: добавили TODO — deleteChat вызывается вместо archiveChat (нет backend API)",
+    items: [
+      { screen:"messages", name:"swipe more bg (dark)" },
+      { screen:"messages", name:"swipe more bg (light)" },
+      { screen:"messages", name:"swipe 'Archive' deletes chat" },
+    ]
+  },
+  {
+    date: "2026-03-29T18:00",
+    tag: "audit",
+    desc: "Аудит экранов: Сообщения — градиент заголовка уже в setupNavigationBarLeftBarButtonItem(). Чат — blur input bar уже реализован. Мероприятия — градиент заголовка уже работает. Event card radius — уже cornerRadii.eventCard=32",
+    items: [
+      { screen:"messages", name:"title gradient" },
+      { screen:"messages", name:"title gradient text" },
+      { screen:"chat", name:"header backdrop blur" },
+      { screen:"events", name:"title gradient" },
+      { screen:"events", name:"event card radius" },
+      { screen:"events", name:"event title font" },
+      { screen:"feed", name:"title tracking" },
+      { screen:"feed", name:"event card radius" },
+      { screen:"feed", name:"event stats text" },
+    ]
+  },
   {
     date: "2026-03-29T17:30",
     tag: "fix",
